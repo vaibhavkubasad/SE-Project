@@ -1,0 +1,121 @@
+import React, { useState } from "react";
+
+export default function UserType({ onBack, onSelect, onLoginSuccess, selectedType }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleLogin() {
+    if (!selectedType) return;
+
+    if (!username.trim() || !password.trim()) {
+      setMessage("Enter both username and password.");
+      setMessageType("error");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setMessage("");
+      setMessageType("");
+
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: selectedType,
+          name: username.trim(),
+          password: password.trim()
+        })
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok) {
+        onLoginSuccess?.(data.user);
+        return;
+      }
+
+      setMessage(data.msg || "Invalid username or password.");
+      setMessageType("error");
+    } catch (error) {
+      setMessage(
+        "Could not reach the login service. Make sure the API server is running."
+      );
+      setMessageType("error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function handleRoleSelect(role) {
+    onSelect(role);
+    setUsername("");
+    setPassword("");
+    setMessage("");
+    setMessageType("");
+  }
+
+  return (
+    <div className="user-type-page">
+      <div className="user-type-panel">
+        <div className="user-type-brand">AKALWADI ASSOCIATES</div>
+        <h1>Select User Type</h1>
+        <p className="user-type-description">
+          Choose the role you want to continue with and proceed to the next step.
+        </p>
+
+        {selectedType ? (
+          <div className="user-type-selected">
+            <p>You selected:</p>
+            <strong>{selectedType}</strong>
+            <p>Enter your username and password to continue.</p>
+
+            <div className="user-type-form">
+              <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                onKeyDown={(event) => event.key === "Enter" && handleLogin()}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                onKeyDown={(event) => event.key === "Enter" && handleLogin()}
+              />
+              <button
+                type="button"
+                className="user-type-login-button"
+                onClick={handleLogin}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Checking..." : `Login as ${selectedType}`}
+              </button>
+              {message ? (
+                <p className={`user-type-message user-type-message-${messageType || "info"}`}>
+                  {message}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : (
+          <div className="user-type-buttons">
+            <button onClick={() => handleRoleSelect("Admin")}>Admin</button>
+            <button onClick={() => handleRoleSelect("Driver")}>Driver</button>
+            <button onClick={() => handleRoleSelect("Wholesaler")}>Wholesaler</button>
+            <button onClick={() => handleRoleSelect("Manager")}>Manager</button>
+          </div>
+        )}
+
+        <button className="back-button" onClick={onBack}>
+          Back to homepage
+        </button>
+      </div>
+    </div>
+  );
+}
