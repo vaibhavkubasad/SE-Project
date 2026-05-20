@@ -1,17 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 
 const OIL_META = {
-  Sunflower: { emoji: "🌻", tagline: "Light & heart-healthy", accent: "#E8A020", bg: "#FFF8EC", border: "#FADDAA" },
-  Coconut: { emoji: "🥥", tagline: "Pure & aromatic", accent: "#1D9E75", bg: "#F0FBF6", border: "#A0DFC5" },
-  Mustard: { emoji: "🟡", tagline: "Bold & traditional", accent: "#C48A0A", bg: "#FFFBEC", border: "#F5DC90" },
-  Groundnut: { emoji: "🥜", tagline: "Rich & flavourful", accent: "#C0613A", bg: "#FFF4F0", border: "#F5C4B0" },
-  "Rice Bran": { emoji: "🌾", tagline: "Versatile & nutritious", accent: "#7A7060", bg: "#F9F7F4", border: "#D4CFC5" }
+  Sunflower: { emoji: "🌻", tagline: "Light & heart-healthy", accent: "#E8A020", bg: "#FFF8EC", border: "#FADDAA", image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80" },
+  Coconut: { emoji: "🥥", tagline: "Pure & aromatic", accent: "#1D9E75", bg: "#F0FBF6", border: "#A0DFC5", image: "https://images.unsplash.com/photo-1621236378699-8c4a0a9a8d39?w=400&q=80" },
+  Mustard: { emoji: "🟡", tagline: "Bold & traditional", accent: "#C48A0A", bg: "#FFFBEC", border: "#F5DC90", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
+  Groundnut: { emoji: "🥜", tagline: "Rich & flavourful", accent: "#C0613A", bg: "#FFF4F0", border: "#F5C4B0", image: "https://images.unsplash.com/photo-1543362906-acfc16c67564?w=400&q=80" },
+  "Rice Bran": { emoji: "🌾", tagline: "Versatile & nutritious", accent: "#7A7060", bg: "#F9F7F4", border: "#D4CFC5", image: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&q=80" }
 };
 
-const FALLBACK_META = { emoji: "🛢️", tagline: "Quality edible oil", accent: "#1D4F8F", bg: "#EEF4FB", border: "#C9DBEF" };
+const FALLBACK_META = { emoji: "🛢️", tagline: "Quality edible oil", accent: "#1D4F8F", bg: "#EEF4FB", border: "#C9DBEF", image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80" };
 
 function fmt(n) {
   return "₹" + Number(n).toLocaleString("en-IN");
+}
+
+function localNavigate(path) {
+  window.history.pushState({}, "", path);
+  window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
 function parseLitres(quantity) {
@@ -58,7 +63,7 @@ function groupOils(rows) {
   }));
 }
 
-function HomePage({ oils, onSelect, cart }) {
+function HomePage({ oils, onSelect, cart, onPlaceOrder, placing, success }) {
   const totalItems = cart.reduce((s, c) => s + c.qty, 0);
   const grandTotal = cart.reduce((s, c) => s + c.total, 0);
 
@@ -87,11 +92,14 @@ function HomePage({ oils, onSelect, cart }) {
       </div>
 
       <div style={{ padding: "0 24px 48px", maxWidth: 720, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
           {oils.map((oil, i) => (
             <OilCard key={oil.id} oil={oil} index={i} onSelect={() => onSelect(oil)} />
           ))}
         </div>
+        {(cart.length > 0 || success) && (
+          <CartPreview cart={cart} onPlaceOrder={onPlaceOrder} placing={placing} success={success} />
+        )}
       </div>
     </div>
   );
@@ -117,7 +125,9 @@ function OilCard({ oil, index, onSelect }) {
         animationDelay: `${index * 0.06}s`
       }}
     >
-      <div style={{ fontSize: 36, marginBottom: 14, lineHeight: 1 }}>{oil.emoji}</div>
+      <div style={{ width: "100%", height: 120, borderRadius: 12, overflow: "hidden", marginBottom: 14 }}>
+        <img src={oil.image} alt={oil.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </div>
       <div style={{ fontFamily: "'Georgia', serif", fontSize: 17, fontWeight: 700, color: "#1A1A16", marginBottom: 4 }}>{oil.name}</div>
       <div style={{ fontSize: 12, color: "#8A8880", fontFamily: "system-ui", marginBottom: 16 }}>{oil.tagline}</div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -135,7 +145,7 @@ function OilCard({ oil, index, onSelect }) {
   );
 }
 
-function OilDetailPage({ oil, onBack, onAddToCart, cart }) {
+function OilDetailPage({ oil, onBack, onAddToCart, cart, onPlaceOrder, placing, success }) {
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [selectedPack, setSelectedPack] = useState(null);
   const [qty, setQty] = useState(10);
@@ -184,7 +194,9 @@ function OilDetailPage({ oil, onBack, onAddToCart, cart }) {
 
       <div style={{ background: oil.bg, borderBottom: `1px solid ${oil.border}`, padding: "32px 24px 28px" }}>
         <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", alignItems: "center", gap: 20 }}>
-          <div style={{ fontSize: 56, lineHeight: 1 }}>{oil.emoji}</div>
+          <div style={{ width: 80, height: 80, borderRadius: 16, overflow: "hidden", flexShrink: 0 }}>
+            <img src={oil.image} alt={oil.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
           <div>
             <div style={{ fontSize: 11, color: oil.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>Edible Oil</div>
             <h2 style={{ fontFamily: "'Georgia', serif", fontSize: 26, fontWeight: 700, color: "#1A1A16", margin: 0, lineHeight: 1.2 }}>{oil.name}</h2>
@@ -295,7 +307,9 @@ function OilDetailPage({ oil, onBack, onAddToCart, cart }) {
           {added ? "✓ Added to order!" : selectedBrand && selectedPack ? `Add to order · ${fmt(totalPrice)}` : "Select brand & pack to continue"}
         </button>
 
-        {cart.length > 0 && <CartPreview cart={cart} />}
+        {(cart.length > 0 || success) && (
+          <CartPreview cart={cart} onPlaceOrder={onPlaceOrder} placing={placing} success={success} />
+        )}
       </div>
     </div>
   );
@@ -350,8 +364,19 @@ function Muted({ children }) {
   return <span style={{ color: "#B0AEA8" }}>{children}</span>;
 }
 
-function CartPreview({ cart }) {
+function CartPreview({ cart, onPlaceOrder, placing, success }) {
   const grand = cart.reduce((s, c) => s + c.total, 0);
+  
+  if (success) {
+    return (
+      <div style={{ marginTop: 24, background: "#F0FBF6", border: "1.5px solid #A0DFC5", borderRadius: 14, padding: "20px 18px", textAlign: "center" }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+        <h3 style={{ color: "#1D9E75", margin: "0 0 4px", fontSize: 16 }}>Order Placed Successfully!</h3>
+        <p style={{ color: "#4A4840", fontSize: 13, margin: 0 }}>Your wholesale order has been submitted. Check the **Orders** section to track it!</p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ marginTop: 24, background: "#F4F2EE", borderRadius: 14, padding: "16px 18px" }}>
       <div style={{ fontSize: 11, color: "#8A8880", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, marginBottom: 12 }}>Your order so far</div>
@@ -361,9 +386,260 @@ function CartPreview({ cart }) {
           <span style={{ fontWeight: 600, color: "#1A1A16" }}>{fmt(c.total)}</span>
         </div>
       ))}
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, paddingTop: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, paddingTop: 8, borderBottom: "1px solid #E0DDD8", paddingBottom: 12 }}>
         <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A16" }}>Grand total</span>
         <span style={{ fontSize: 16, fontWeight: 700, color: "#1D9E75", fontFamily: "'Georgia', serif" }}>{fmt(grand)}</span>
+      </div>
+
+      <button
+        onClick={onPlaceOrder}
+        disabled={placing || cart.length === 0}
+        style={{
+          width: "100%",
+          padding: "12px",
+          borderRadius: 10,
+          border: "none",
+          background: placing ? "#8A8880" : "#1D9E75",
+          color: "#fff",
+          fontWeight: 700,
+          fontSize: 14,
+          cursor: placing ? "not-allowed" : "pointer",
+          marginTop: 14,
+          boxShadow: placing ? "none" : "0 4px 12px rgba(29, 158, 117, 0.2)",
+          transition: "all 0.2s"
+        }}
+      >
+        {placing ? "🔄 Placing Order..." : "⚡ Place Wholesale Order"}
+      </button>
+    </div>
+  );
+}
+
+function SuccessPopup({ order, onClose }) {
+  if (!order) return null;
+  const grandTotal = order.totalAmount || 0;
+  const shortId = order._id ? String(order._id).substring(18).toUpperCase() : "TAP-SUCCESS";
+  const dateStr = new Date(order.createdAt || Date.now()).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  // Synthesize a beautiful digital chime that mimics standard UPI payment apps
+  useEffect(() => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc1.type = "sine";
+      const now = audioCtx.currentTime;
+      // High-quality three-tone chord chime (C5 -> E5 -> G5 -> C6)
+      osc1.frequency.setValueAtTime(523.25, now); // C5
+      osc1.frequency.setValueAtTime(659.25, now + 0.08); // E5
+      osc1.frequency.setValueAtTime(783.99, now + 0.16); // G5
+      osc1.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(261.63, now); // C4
+      osc2.frequency.setValueAtTime(329.63, now + 0.08); // E4
+      osc2.frequency.setValueAtTime(392.00, now + 0.16); // G4
+      osc2.frequency.setValueAtTime(523.25, now + 0.24); // C5
+
+      gainNode.gain.setValueAtTime(0.12, now);
+      gainNode.gain.setValueAtTime(0.16, now + 0.24);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+      osc1.connect(gainNode);
+      osc2.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      osc1.start();
+      osc2.start();
+      osc1.stop(now + 1.2);
+      osc2.stop(now + 1.2);
+    } catch (err) {
+      console.warn("Chime playback was blocked by browser audio policies or unsupported API:", err);
+    }
+  }, []);
+
+  return (
+    <div style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(10, 10, 10, 0.45)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 9999,
+      fontFamily: "system-ui, -apple-system, sans-serif"
+    }}>
+      <style>{`
+        @keyframes scaleIn {
+          0% { transform: scale(0.95); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes drawCheck {
+          0% { stroke-dashoffset: 48; }
+          100% { stroke-dashoffset: 0; }
+        }
+        @keyframes successPulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.03); }
+          100% { transform: scale(1); }
+        }
+        @keyframes rippleRing {
+          0% { transform: scale(0.8); opacity: 0.8; }
+          100% { transform: scale(1.8); opacity: 0; }
+        }
+      `}</style>
+
+      <div style={{
+        background: "#ffffff",
+        borderRadius: 24,
+        padding: "36px 32px",
+        width: "90%",
+        maxWidth: 400,
+        textAlign: "center",
+        boxShadow: "0 24px 60px rgba(0, 0, 0, 0.16)",
+        border: "1px solid rgba(255, 255, 255, 0.8)",
+        animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both"
+      }}>
+        {/* Animated Checkmark SVG (UPI Style with concentric pulsing ripples) */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 24, position: "relative" }}>
+          <div style={{
+            position: "absolute",
+            width: 88,
+            height: 88,
+            borderRadius: "50%",
+            border: "3px solid #D1F2E2",
+            animation: "rippleRing 1.5s cubic-bezier(0.16, 1, 0.3, 1) infinite",
+            zIndex: 1
+          }} />
+          <div style={{
+            position: "absolute",
+            width: 88,
+            height: 88,
+            borderRadius: "50%",
+            border: "1px solid #D1F2E2",
+            animation: "rippleRing 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s infinite",
+            zIndex: 1
+          }} />
+
+          <div style={{
+            position: "relative",
+            width: 88,
+            height: 88,
+            borderRadius: "50%",
+            background: "#E6F7ED",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 8px 24px rgba(29, 158, 117, 0.15)",
+            animation: "successPulse 1.2s 0.6s ease-in-out infinite",
+            zIndex: 2
+          }}>
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" style={{
+                strokeDasharray: 48,
+                strokeDashoffset: 48,
+                animation: "drawCheck 0.5s 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards"
+              }} />
+            </svg>
+          </div>
+        </div>
+
+        {/* UPI-style confirmation text */}
+        <h2 style={{ fontSize: 20, fontWeight: 800, color: "#1A1A16", margin: "0 0 6px" }}>Order Placed Successfully</h2>
+        <p style={{ fontSize: 13, color: "#8A8880", margin: "0 0 24px" }}>Order Confirmed · Payable on Delivery</p>
+
+        {/* Large Amount Display */}
+        <div style={{
+          background: "#F4FDF9",
+          border: "1.5px solid #D1F2E2",
+          borderRadius: 18,
+          padding: "16px",
+          marginBottom: 24,
+          textAlign: "center"
+        }}>
+          <div style={{ fontSize: 11, color: "#1D9E75", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>Amount to be Paid</div>
+          <div style={{ fontSize: 32, fontWeight: 900, color: "#1D9E75", fontFamily: "'Georgia', serif" }}>
+            {fmt(grandTotal)}
+          </div>
+        </div>
+
+        {/* Transaction Info Table */}
+        <div style={{
+          background: "#FAFAF8",
+          borderRadius: 16,
+          padding: "16px",
+          border: "1px solid #EDEAE4",
+          marginBottom: 28,
+          textAlign: "left",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+            <span style={{ color: "#8A8880" }}>Wholesaler</span>
+            <span style={{ color: "#1A1A16", fontWeight: 600 }}>{order.wholesalerName}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+            <span style={{ color: "#8A8880" }}>Order ID</span>
+            <span style={{ color: "#1A1A16", fontWeight: 600, fontFamily: "monospace" }}>{shortId}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+            <span style={{ color: "#8A8880" }}>Date & Time</span>
+            <span style={{ color: "#1A1A16", fontWeight: 600 }}>{dateStr}</span>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: 12 }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: "12px 16px",
+              borderRadius: 12,
+              border: "1.5px solid #EDEAE4",
+              background: "#ffffff",
+              color: "#4A4840",
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: "pointer",
+              transition: "all 0.15s"
+            }}
+          >
+            Done
+          </button>
+          <button
+            onClick={() => {
+              onClose();
+              localNavigate("/orders");
+            }}
+            style={{
+              flex: 1.2,
+              padding: "12px 16px",
+              borderRadius: 12,
+              border: "none",
+              background: "#1D9E75",
+              color: "#ffffff",
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: "pointer",
+              boxShadow: "0 6px 16px rgba(29, 158, 117, 0.25)",
+              transition: "all 0.15s"
+            }}
+          >
+            Track Order →
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -376,6 +652,9 @@ export default function App() {
   const [rawOils, setRawOils] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [placing, setPlacing] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [placedOrder, setPlacedOrder] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -402,6 +681,35 @@ export default function App() {
 
   const oils = useMemo(() => groupOils(rawOils), [rawOils]);
 
+  async function handlePlaceOrder() {
+    if (cart.length === 0) return;
+    setPlacing(true);
+    try {
+      const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      const wholesalerName = user.name || "Guest Wholesaler";
+
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wholesalerName,
+          items: cart,
+          totalAmount: cart.reduce((s, c) => s + c.total, 0)
+        })
+      });
+
+      if (!response.ok) throw new Error("Failed to submit order");
+      
+      const data = await response.json();
+      setPlacedOrder(data.order);
+      setCart([]);
+    } catch (err) {
+      alert("Error placing order: " + err.message);
+    } finally {
+      setPlacing(false);
+    }
+  }
+
   if (loading) {
     return <CenterMessage>Loading oils…</CenterMessage>;
   }
@@ -421,26 +729,35 @@ export default function App() {
     return <CenterMessage>No oils available right now.</CenterMessage>;
   }
 
-  if (page === "detail" && selectedOil) {
-    return (
-      <OilDetailPage
-        oil={selectedOil}
-        onBack={() => setPage("home")}
-        onAddToCart={(item) => setCart((prev) => [...prev, item])}
-        cart={cart}
-      />
-    );
-  }
-
   return (
-    <HomePage
-      oils={oils}
-      onSelect={(oil) => {
-        setSelectedOil(oil);
-        setPage("detail");
-      }}
-      cart={cart}
-    />
+    <>
+      {page === "detail" && selectedOil ? (
+        <OilDetailPage
+          oil={selectedOil}
+          onBack={() => setPage("home")}
+          onAddToCart={(item) => setCart((prev) => [...prev, item])}
+          cart={cart}
+          onPlaceOrder={handlePlaceOrder}
+          placing={placing}
+          success={success}
+        />
+      ) : (
+        <HomePage
+          oils={oils}
+          onSelect={(oil) => {
+            setSelectedOil(oil);
+            setPage("detail");
+          }}
+          cart={cart}
+          onPlaceOrder={handlePlaceOrder}
+          placing={placing}
+          success={success}
+        />
+      )}
+      {placedOrder && (
+        <SuccessPopup order={placedOrder} onClose={() => setPlacedOrder(null)} />
+      )}
+    </>
   );
 }
 
