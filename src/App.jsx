@@ -6,6 +6,9 @@ import OilListBeforeLogin from "../oillistbeforelogin";
 import MasalaList from "../masalalist";
 import MasalaListBeforeLogin from "../masalalistbeforlogin";
 import Logout from "../logout";
+import OrdersPage from "./OrdersPage";
+import ManagerDashboard from "./ManagerDashboard";
+import AdminDashboard from "./AdminDashboard";
 
 const HOME_PATH = "/";
 const ABOUT_PATH = "/about";
@@ -13,6 +16,9 @@ const USER_TYPE_PATH = "/usertype";
 const OIL_LIST_PATH = "/oil";
 const MASALA_LIST_PATH = "/spices";
 const LOGOUT_PATH = "/logout";
+const ORDERS_PATH = "/orders";
+const MANAGER_PATH = "/manager";
+const ADMIN_PATH = "/admin";
 
 const navItems = [
   { label: "Home", href: HOME_PATH },
@@ -72,6 +78,9 @@ function getCurrentPath() {
   const path = window.location.pathname || HOME_PATH;
   if (path === "/index.html") return HOME_PATH;
   if (path === "/masalas") return MASALA_LIST_PATH;
+  if (path === "/orders") return ORDERS_PATH;
+  if (path === "/manager") return MANAGER_PATH;
+  if (path === "/admin") return ADMIN_PATH;
   return path;
 }
 
@@ -332,7 +341,21 @@ function HomePage() {
 
 function App() {
   const [pathname, setPathname] = useState(getCurrentPath);
-  const [selectedType, setSelectedType] = useState("");
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("currentUser") || "null");
+    } catch {
+      return null;
+    }
+  });
+  const [selectedType, setSelectedType] = useState(() => {
+    try {
+      const persisted = JSON.parse(localStorage.getItem("currentUser") || "null");
+      return persisted?.role || "";
+    } catch {
+      return "";
+    }
+  });
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -350,7 +373,12 @@ function App() {
         selectedType={selectedType}
         onSelect={setSelectedType}
         onBack={() => navigateTo(HOME_PATH)}
-        onLoginSuccess={() => navigateTo(LOGOUT_PATH)}
+        onLoginSuccess={(user) => {
+          const userWithRole = { ...user, role: selectedType };
+          setCurrentUser(userWithRole);
+          localStorage.setItem("currentUser", JSON.stringify(userWithRole));
+          navigateTo(LOGOUT_PATH);
+        }}
       />
     );
   }
@@ -365,6 +393,8 @@ function App() {
         selectedType={selectedType}
         onNavigate={navigateTo}
         onLogout={() => {
+          setCurrentUser(null);
+          localStorage.removeItem("currentUser");
           setSelectedType("");
           navigateTo(HOME_PATH);
         }}
@@ -378,6 +408,30 @@ function App() {
 
   if (pathname === MASALA_LIST_PATH) {
     return selectedType ? <MasalaList /> : <MasalaListBeforeLogin />;
+  }
+
+  if (pathname === ORDERS_PATH) {
+    return selectedType === "Wholesaler" ? (
+      <OrdersPage onNavigate={navigateTo} />
+    ) : (
+      <HomePage />
+    );
+  }
+
+  if (pathname === MANAGER_PATH) {
+    return selectedType === "Manager" ? (
+      <ManagerDashboard onNavigate={navigateTo} />
+    ) : (
+      <HomePage />
+    );
+  }
+
+  if (pathname === ADMIN_PATH) {
+    return selectedType === "Admin" ? (
+      <AdminDashboard onNavigate={navigateTo} />
+    ) : (
+      <HomePage />
+    );
   }
 
   return <HomePage />;

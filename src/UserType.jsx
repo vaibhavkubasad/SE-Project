@@ -71,6 +71,31 @@ export default function UserType({ onBack, onSelect, onLoginSuccess, selectedTyp
           <div className="user-type-selected">
             <p>You selected:</p>
             <strong>{selectedType}</strong>
+            <div style={{ marginTop: 8, marginBottom: 16 }}>
+              <button
+                type="button"
+                onClick={() => handleRoleSelect("")}
+                style={{
+                  background: "none",
+                  border: "1.5px solid #e8960a",
+                  borderRadius: 20,
+                  padding: "6px 14px",
+                  fontSize: 12,
+                  color: "#e8960a",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  transition: "all 0.15s"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#fff8ec";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "none";
+                }}
+              >
+                🔄 Select a different role
+              </button>
+            </div>
             <p>Enter your username and password to continue.</p>
 
             <div className="user-type-form">

@@ -5,6 +5,7 @@ const oils = [
     id: "sunflower",
     name: "Sunflower Oil",
     emoji: "🌻",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80",
     discount: "18% OFF",
     brands: ["Gemini", "Fortune", "Saffola", "Sundrop", "Gold Winner"],
     sizes: ["1 L", "2 L", "5 L", "15 L", "50 L"],
@@ -13,6 +14,7 @@ const oils = [
     id: "coconut",
     name: "Coconut Oil",
     emoji: "🥥",
+    image: "https://images.unsplash.com/photo-1621236378699-8c4a0a9a8d39?w=400&q=80",
     discount: "12% OFF",
     brands: ["Parachute", "KLF Nirmal", "Coco Soul", "Marico", "Patanjali"],
     sizes: ["500 ml", "1 L", "2 L", "5 L", "15 L"],
@@ -21,6 +23,7 @@ const oils = [
     id: "mustard",
     name: "Mustard Oil",
     emoji: "🫙",
+    image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80",
     discount: "22% OFF",
     brands: ["Patanjali", "Engine", "Dhara", "Fortune", "Borges"],
     sizes: ["1 L", "2 L", "5 L", "15 L", "50 L"],
@@ -29,6 +32,7 @@ const oils = [
     id: "groundnut",
     name: "Groundnut Oil",
     emoji: "🥜",
+    image: "https://images.unsplash.com/photo-1543362906-acfc16c67564?w=400&q=80",
     discount: "15% OFF",
     brands: ["Fortune", "Sundrop", "Gokul", "Ceres", "Rajam"],
     sizes: ["1 L", "2 L", "5 L", "15 L", "50 L"],
@@ -37,6 +41,7 @@ const oils = [
     id: "ricebran",
     name: "Rice Bran Oil",
     emoji: "🌾",
+    image: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&q=80",
     discount: "20% OFF",
     brands: ["Fortune", "Saffola", "Nutrela", "Vitalife", "Rice Bran Health"],
     sizes: ["1 L", "2 L", "5 L", "15 L", "50 L"],
@@ -114,7 +119,9 @@ function OilCard({ oil, onAdd }) {
           fontSize: 11, fontWeight: 700, padding: "4px 10px",
           borderRadius: "0 6px 6px 0", letterSpacing: "0.03em",
         }}>{oil.discount}</div>
-        <div style={{ fontSize: 64, lineHeight: 1 }}>{oil.emoji}</div>
+        <div style={{ fontSize: 64, lineHeight: 1 }}>
+          <img src={oil.image} alt={oil.name} style={{ width: "100%", height: 100, objectFit: "cover", borderRadius: 8 }} />
+        </div>
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 4,
           fontSize: 11, color: "#3A7D0A", fontWeight: 700,

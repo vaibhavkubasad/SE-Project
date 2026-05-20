@@ -55,6 +55,25 @@ const productCategories = [
 export default function Logout({ selectedType, onLogout, onNavigate }) {
   const navigate = onNavigate || (() => {});
 
+  const dynamicNavItems = [
+    { label: "Home", href: HOME_PATH },
+    { label: "About Us", href: ABOUT_PATH },
+    {
+      label: "Products",
+      href: "#products",
+      dropdown: [
+        { label: "Toiletries", href: "#products" },
+        { label: "Spices", href: MASALA_LIST_PATH },
+        { label: "Edible Oil", href: OIL_LIST_PATH }
+      ]
+    },
+    ...(selectedType === "Wholesaler" ? [{ label: "Orders", href: "/orders" }] : []),
+    ...(selectedType === "Manager" ? [{ label: "Manager Dashboard", href: "/manager" }] : []),
+    ...(selectedType === "Admin" ? [{ label: "Admin Dashboard", href: "/admin" }] : []),
+    { label: "Contact Us", href: "#contact" },
+    { label: "Logout", href: "/logout-action" }
+  ];
+
   return (
     <div className="page-shell">
       <header className="hero-section" id="top">
@@ -72,7 +91,7 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
           </a>
 
           <ul className="nav-links">
-            {navItems.map((item) => (
+            {dynamicNavItems.map((item) => (
               <li
                 key={item.label}
                 className={item.dropdown ? "nav-dropdown" : ""}
@@ -83,6 +102,9 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
                     if (item.href === "/logout-action") {
                       event.preventDefault();
                       onLogout?.();
+                    } else if (item.href === "/orders" || item.href === "/manager" || item.href === "/admin") {
+                      event.preventDefault();
+                      navigate(item.href);
                     } else if (item.href === ABOUT_PATH || item.href === HOME_PATH) {
                       event.preventDefault();
                       navigate(item.href);
@@ -126,33 +148,103 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
             <p className="eyebrow">
               {selectedType ? `${selectedType} • Logged In` : "Logged In"}
             </p>
-            <h1>Welcome back to Akalwadi Associates.</h1>
+            <h1>
+              {selectedType === "Admin"
+                ? "Admin Control Center"
+                : selectedType === "Manager" 
+                ? "Manager Administration Portal" 
+                : "Welcome back to Akalwadi Associates."}
+            </h1>
             <p className="hero-lead">
-              You're signed in. Browse our product catalogue, check business
-              details, or get in touch — your wholesale dashboard is ready.
+              {selectedType === "Admin"
+                ? "You're signed in as Admin. Access analytics, manage wholesaler stores, and oversee staff operations from your control panel."
+                : selectedType === "Manager"
+                ? "You're signed in as a Manager. Access stock control parameters, update inventory, or dispatch wholesaler orders immediately."
+                : "You're signed in. Browse our product catalogue, check business details, or get in touch — your wholesale dashboard is ready."}
             </p>
 
             <div className="hero-actions">
-              <a
-                href={OIL_LIST_PATH}
-                className="primary-button"
-                onClick={(event) => {
-                  event.preventDefault();
-                  navigate(OIL_LIST_PATH);
-                }}
-              >
-                View Edible Oils
-              </a>
-              <a
-                href={MASALA_LIST_PATH}
-                className="secondary-button"
-                onClick={(event) => {
-                  event.preventDefault();
-                  navigate(MASALA_LIST_PATH);
-                }}
-              >
-                View Spices
-              </a>
+              {selectedType === "Admin" ? (
+                <>
+                  <a
+                    href="/admin"
+                    className="primary-button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      navigate("/admin");
+                    }}
+                  >
+                    Open Admin Panel
+                  </a>
+                  <a
+                    href={OIL_LIST_PATH}
+                    className="secondary-button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      navigate(OIL_LIST_PATH);
+                    }}
+                  >
+                    Browse Products
+                  </a>
+                </>
+              ) : selectedType === "Manager" ? (
+                <>
+                  <a
+                    href="/manager"
+                    className="primary-button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      navigate("/manager");
+                    }}
+                  >
+                    Open Control Panel
+                  </a>
+                  <a
+                    href={OIL_LIST_PATH}
+                    className="secondary-button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      navigate(OIL_LIST_PATH);
+                    }}
+                  >
+                    Browse Oils
+                  </a>
+                </>
+              ) : (
+                <>
+                  <a
+                    href={OIL_LIST_PATH}
+                    className="primary-button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      navigate(OIL_LIST_PATH);
+                    }}
+                  >
+                    View Edible Oils
+                  </a>
+                  <a
+                    href={MASALA_LIST_PATH}
+                    className="secondary-button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      navigate(MASALA_LIST_PATH);
+                    }}
+                  >
+                    View Spices
+                  </a>
+                  <a
+                    href="/orders"
+                    className="secondary-button"
+                    style={{ marginLeft: 10, background: "#1A1A16", color: "#fff" }}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      navigate("/orders");
+                    }}
+                  >
+                    Track Orders
+                  </a>
+                </>
+              )}
             </div>
           </div>
 
