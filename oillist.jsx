@@ -70,9 +70,16 @@ function HomePage({ oils, onSelect, cart, onPlaceOrder, placing, success }) {
   return (
     <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", minHeight: "100vh", background: "#FAFAF8" }}>
       <div style={{ background: "#fff", borderBottom: "1px solid #EDEAE4", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10 }}>
-        <div>
-          <div style={{ fontFamily: "'Georgia', serif", fontSize: 20, fontWeight: 700, color: "#1A1A16", letterSpacing: "-0.3px" }}>Akalwadi Oils</div>
-          <div style={{ fontSize: 11, color: "#8A8880", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "system-ui" }}>Wholesale Edible Oils</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }} onClick={() => localNavigate("/")}>
+          <div style={{
+            background: "#556B2F", borderRadius: "50%", width: "42px", height: "42px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "16px", fontWeight: "700", color: "#FAF7F2", fontFamily: "'Playfair Display', serif"
+          }}>AA</div>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B2B", letterSpacing: "0.03em", fontFamily: "'Playfair Display', serif", lineHeight: "1.1" }}>Akalwadi</div>
+            <div style={{ fontSize: "9px", color: "#7A8279", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: "600", marginTop: "1px" }}>Associates</div>
+          </div>
         </div>
         {totalItems > 0 && (
           <div style={{ background: "#1A1A16", color: "#fff", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontFamily: "system-ui" }}>

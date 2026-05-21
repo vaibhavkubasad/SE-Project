@@ -53,46 +53,54 @@ function LoginModal({ onClose }) {
     <div
       onClick={onClose}
       style={{
-        position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)",
+        position: "fixed", inset: 0, background: "rgba(27,41,26,0.5)",
         display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+        backdropFilter: "blur(4px)"
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: "#fff", borderRadius: 16, padding: "32px 28px", width: 340,
-          boxShadow: "0 20px 60px rgba(0,0,0,0.18)", textAlign: "center",
-          animation: "popIn 0.2s ease",
+          background: "#FAF7F2", borderRadius: 16, padding: "36px 32px", width: 360,
+          boxShadow: "0 24px 64px rgba(85,107,47,0.15)", textAlign: "center",
+          border: "1px solid rgba(85,107,47,0.12)",
+          fontFamily: "'Poppins', sans-serif"
         }}
       >
-        <div style={{ fontSize: 44, marginBottom: 12 }}>🔒</div>
-        <h2 style={{ fontFamily: "'Georgia', serif", fontSize: 20, fontWeight: 700, color: "#1A1A16", marginBottom: 8 }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+        <h2 style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 22, fontWeight: 800, color: "#2B2B2B", marginBottom: 10 }}>
           Login Required
         </h2>
-        <p style={{ fontSize: 14, color: "#6A6860", lineHeight: 1.6, marginBottom: 6 }}>
+        <p style={{ fontSize: 14, color: "#4B524A", lineHeight: 1.6, marginBottom: 6 }}>
           You are not logged in.
         </p>
-        <p style={{ fontSize: 13, color: "#8A8880", lineHeight: 1.6, marginBottom: 24 }}>
-          Please log in to view wholesale prices and add items to your order.
+        <p style={{ fontSize: 13, color: "#7A8279", lineHeight: 1.6, marginBottom: 28 }}>
+          Please log in as a Wholesaler to view wholesale pricing and place bulk orders.
         </p>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: 12 }}>
           <button
             onClick={onClose}
             style={{
-              flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #EDEAE4",
-              background: "#fff", fontSize: 14, fontWeight: 600, color: "#4A4840", cursor: "pointer",
+              flex: 1, padding: "12px", borderRadius: 8, border: "1.5px solid #556B2F",
+              background: "transparent", fontSize: 14, fontWeight: 700, color: "#556B2F", cursor: "pointer",
+              transition: "all 0.2s"
             }}
           >
             Cancel
           </button>
           <button
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              window.history.pushState({}, "", "/usertype");
+              window.dispatchEvent(new PopStateEvent("popstate"));
+            }}
             style={{
-              flex: 1, padding: "11px", borderRadius: 10, border: "none",
-              background: "#3A7D0A", fontSize: 14, fontWeight: 700, color: "#fff", cursor: "pointer",
+              flex: 1, padding: "12px", borderRadius: 8, border: "none",
+              background: "#556B2F", fontSize: 14, fontWeight: 700, color: "#FAF7F2", cursor: "pointer",
+              transition: "all 0.2s"
             }}
           >
-            Login / Sign Up
+            Login Now
           </button>
         </div>
       </div>
@@ -107,45 +115,37 @@ function OilCard({ oil, onAdd }) {
 
   return (
     <div style={{
-      background: "#fff", borderRadius: 14, overflow: "hidden",
-      border: "1px solid #EDEAE4", display: "flex", flexDirection: "column",
-      boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+      background: "#fff", borderRadius: 16, overflow: "hidden",
+      border: "1px solid rgba(85,107,47,0.12)", display: "flex", flexDirection: "column",
+      boxShadow: "0 4px 15px rgba(85,107,47,0.01)", transition: "all 0.2s ease-in-out",
+      fontFamily: "'Poppins', sans-serif"
     }}>
       {/* Image area */}
-      <div style={{ position: "relative", background: "#F8F6F0", padding: "28px 16px 20px", textAlign: "center" }}>
+      <div style={{ position: "relative", background: "#FAF7F2", padding: "0px", textAlign: "center", overflow: "hidden", height: 160 }}>
         <div style={{
-          position: "absolute", top: 10, left: 0,
-          background: "#3A7D0A", color: "#fff",
+          position: "absolute", top: 12, left: 12,
+          background: "#D4A017", color: "#FAF7F2",
           fontSize: 11, fontWeight: 700, padding: "4px 10px",
-          borderRadius: "0 6px 6px 0", letterSpacing: "0.03em",
+          borderRadius: 4, letterSpacing: "0.03em", zIndex: 2
         }}>{oil.discount}</div>
-        <div style={{ fontSize: 64, lineHeight: 1 }}>
-          <img src={oil.image} alt={oil.name} style={{ width: "100%", height: 100, objectFit: "cover", borderRadius: 8 }} />
-        </div>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 4,
-          fontSize: 11, color: "#3A7D0A", fontWeight: 700,
-          marginTop: 10, background: "#EEF8E6", padding: "3px 10px", borderRadius: 999,
-        }}>
-          ⚡ 10 MINS
-        </div>
+        <img src={oil.image} alt={oil.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
 
       {/* Info */}
-      <div style={{ padding: "14px 14px 0" }}>
-        <div style={{ fontSize: 11, color: "#8A8880", marginBottom: 2 }}>fresho!</div>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#1A1A16", marginBottom: 12, lineHeight: 1.3 }}>{oil.name}</div>
+      <div style={{ padding: "20px 20px 0", flexGrow: 1, display: "flex", flexDirection: "column" }}>
+        <div style={{ fontSize: 11, color: "#7A8279", marginBottom: 4, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>Premium Oils</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#2B2B2B", marginBottom: 14, lineHeight: 1.4, fontFamily: "'Montserrat', sans-serif", flexGrow: 1 }}>{oil.name}</div>
 
         {/* Brand dropdown */}
-        <div style={{ marginBottom: 8 }}>
-          <label style={{ fontSize: 11, color: "#8A8880", display: "block", marginBottom: 4 }}>Brand</label>
+        <div style={{ marginBottom: 10 }}>
+          <label style={{ fontSize: 11, color: "#7A8279", display: "block", marginBottom: 4, fontWeight: 500 }}>Brand</label>
           <select
             value={brand}
             onChange={e => setBrand(e.target.value)}
             style={{
-              width: "100%", padding: "7px 10px", borderRadius: 8,
-              border: "1px solid #DEDAD4", fontSize: 13, color: "#1A1A16",
-              background: "#FAFAF8", cursor: "pointer", fontFamily: "system-ui",
+              width: "100%", padding: "8px 10px", borderRadius: 6,
+              border: "1px solid rgba(85,107,47,0.15)", fontSize: 13, color: "#2B2B2B",
+              background: "#FAF7F2", cursor: "pointer", fontFamily: "'Poppins', sans-serif",
             }}
           >
             {oil.brands.map(b => <option key={b}>{b}</option>)}
@@ -153,15 +153,15 @@ function OilCard({ oil, onAdd }) {
         </div>
 
         {/* Size dropdown */}
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ fontSize: 11, color: "#8A8880", display: "block", marginBottom: 4 }}>Pack size</label>
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ fontSize: 11, color: "#7A8279", display: "block", marginBottom: 4, fontWeight: 500 }}>Pack size</label>
           <select
             value={size}
             onChange={e => setSize(e.target.value)}
             style={{
-              width: "100%", padding: "7px 10px", borderRadius: 8,
-              border: "1px solid #DEDAD4", fontSize: 13, color: "#1A1A16",
-              background: "#FAFAF8", cursor: "pointer", fontFamily: "system-ui",
+              width: "100%", padding: "8px 10px", borderRadius: 6,
+              border: "1px solid rgba(85,107,47,0.15)", fontSize: 13, color: "#2B2B2B",
+              background: "#FAF7F2", cursor: "pointer", fontFamily: "'Poppins', sans-serif",
             }}
           >
             {oil.sizes.map(s => <option key={s}>{s}</option>)}
@@ -169,44 +169,49 @@ function OilCard({ oil, onAdd }) {
         </div>
 
         {/* Price hidden */}
-        <div style={{
-          background: "#F4F2EE", borderRadius: 8, padding: "9px 12px",
-          fontSize: 12, color: "#8A8880", display: "flex", alignItems: "center", gap: 6, marginBottom: 14,
-        }}>
-          🔒 <span>Login to view price</span>
+        <div
+          onClick={onAdd}
+          style={{
+            background: "#E8EDE4", border: "1px solid rgba(85,107,47,0.15)", borderRadius: 6, padding: "10px 12px",
+            fontSize: 12, color: "#556B2F", display: "flex", alignItems: "center", gap: 8, marginBottom: 16,
+            fontWeight: 600, cursor: "pointer"
+          }}
+        >
+          🔒 <span>Login to view wholesale prices</span>
         </div>
       </div>
 
       {/* Bottom: qty + add */}
-      <div style={{ padding: "0 14px 14px", marginTop: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ padding: "0 20px 20px", display: "flex", alignItems: "center", gap: 10 }}>
         {/* Bookmark */}
-        <button style={{
-          width: 38, height: 38, borderRadius: 8, border: "1px solid #DEDAD4",
-          background: "#fff", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-        }}>🔖</button>
+        <button
+          onClick={onAdd}
+          style={{
+            width: 38, height: 38, borderRadius: 6, border: "1px solid rgba(85,107,47,0.15)",
+            background: "#fff", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}
+        >🔖</button>
 
         {/* Qty */}
         <div style={{
-          display: "flex", alignItems: "center", border: "1px solid #DEDAD4",
-          borderRadius: 8, overflow: "hidden", flexShrink: 0,
+          display: "flex", alignItems: "center", border: "1px solid rgba(85,107,47,0.15)",
+          borderRadius: 6, overflow: "hidden", flexShrink: 0,
         }}>
-          <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ width: 28, height: 38, border: "none", background: "#F4F2EE", fontSize: 16, cursor: "pointer", color: "#3A7D0A", fontWeight: 700 }}>−</button>
-          <span style={{ width: 28, textAlign: "center", fontSize: 13, fontWeight: 700, color: "#1A1A16" }}>{qty}</span>
-          <button onClick={() => setQty(q => q + 1)} style={{ width: 28, height: 38, border: "none", background: "#F4F2EE", fontSize: 16, cursor: "pointer", color: "#3A7D0A", fontWeight: 700 }}>+</button>
+          <button onClick={onAdd} style={{ width: 28, height: 38, border: "none", background: "#E8EDE4", fontSize: 16, cursor: "pointer", color: "#556B2F", fontWeight: 700 }}>−</button>
+          <span style={{ width: 28, textAlign: "center", fontSize: 13, fontWeight: 700, color: "#2B2B2B" }}>{qty}</span>
+          <button onClick={onAdd} style={{ width: 28, height: 38, border: "none", background: "#E8EDE4", fontSize: 16, cursor: "pointer", color: "#556B2F", fontWeight: 700 }}>+</button>
         </div>
 
         {/* Add */}
         <button
-          onClick={() => onAdd()}
+          onClick={onAdd}
           style={{
-            flex: 1, height: 38, borderRadius: 8,
-            border: "1.5px solid #D32F2F", background: "#fff",
-            color: "#D32F2F", fontSize: 14, fontWeight: 700,
-            cursor: "pointer", fontFamily: "system-ui", letterSpacing: "0.02em",
-            transition: "all 0.15s",
+            flex: 1, height: 38, borderRadius: 6,
+            border: "1.5px solid #556B2F", background: "transparent",
+            color: "#556B2F", fontSize: 13, fontWeight: 700,
+            cursor: "pointer", fontFamily: "'Montserrat', sans-serif", letterSpacing: "0.02em",
+            transition: "all 0.2s",
           }}
-          onMouseEnter={e => { e.target.background = "#FFF0F0"; e.target.style.background = "#FFF5F5"; }}
-          onMouseLeave={e => { e.target.style.background = "#fff"; }}
         >
           Add
         </button>
@@ -215,121 +220,114 @@ function OilCard({ oil, onAdd }) {
   );
 }
 
-export default function App() {
+export default function OilListBeforeLogin() {
   const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filtered = oils.filter(o => o.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", minHeight: "100vh", background: "#F2F0EB" }}>
-      <style>{`@keyframes popIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }`}</style>
-
+    <div style={{ minHeight: "100vh", background: "#FAF7F2", fontFamily: "'Poppins', sans-serif" }}>
       {showModal && <LoginModal onClose={() => setShowModal(false)} />}
 
-      {/* Top nav — blinkit style */}
+      {/* Header Container */}
       <div style={{
-        background: "#fff", borderBottom: "1px solid #EDEAE4",
-        padding: "10px 24px", display: "flex", alignItems: "center",
-        gap: 16, position: "sticky", top: 0, zIndex: 100,
-        boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
+        position: "sticky", top: 0, zIndex: 100,
+        background: "rgba(250, 247, 242, 0.85)", backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(85,107,47,0.12)", padding: "14px 40px",
+        display: "flex", alignItems: "center", justifyContent: "space-between"
       }}>
-        {/* Logo */}
-        <div style={{
-          background: "#F5C518", borderRadius: 10, width: 40, height: 40,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 18, fontWeight: 900, color: "#1A1A16", flexShrink: 0,
-        }}>🛢</div>
+        <a href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
+          <div style={{
+            background: "#556B2F", borderRadius: "50%", width: "42px", height: "42px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "16px", fontWeight: "700", color: "#FAF7F2", fontFamily: "'Playfair Display', serif"
+          }}>AA</div>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B2B", letterSpacing: "0.03em", fontFamily: "'Playfair Display', serif", lineHeight: "1.1" }}>Akalwadi</div>
+            <div style={{ fontSize: "9px", color: "#7A8279", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: "600", marginTop: "1px" }}>Associates</div>
+          </div>
+        </a>
 
-        {/* Category btn */}
-        <div style={{
-          background: "#3A7D0A", color: "#fff", borderRadius: 8,
-          padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer",
-          display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
-        }}>
-          Shop by Category ▾
-        </div>
-
-        {/* Search */}
-        <div style={{ flex: 1, position: "relative" }}>
-          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#8A8880", fontSize: 16 }}>🔍</span>
-          <input
-            placeholder="Search for Oils..."
-            style={{
-              width: "100%", padding: "9px 12px 9px 36px", borderRadius: 8,
-              border: "1px solid #EDEAE4", background: "#F8F6F0", fontSize: 14,
-              color: "#1A1A16", fontFamily: "system-ui", outline: "none", boxSizing: "border-box",
-            }}
-          />
-        </div>
-
-        {/* Delivery */}
-        <div style={{
-          background: "#EEF8E6", border: "1px solid #CCEAAA", borderRadius: 8,
-          padding: "7px 14px", textAlign: "center", flexShrink: 0,
-        }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#3A7D0A" }}>⚡ Delivery in 10 mins</div>
-          <div style={{ fontSize: 11, color: "#6A8A50" }}>Select Location</div>
-        </div>
-
-        {/* Login btn */}
+        {/* Action */}
         <button
           onClick={() => setShowModal(true)}
           style={{
-            padding: "8px 18px", borderRadius: 8, border: "1.5px solid #3A7D0A",
-            background: "#fff", color: "#3A7D0A", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0,
+            padding: "8px 20px", borderRadius: 20, border: "1.5px solid #556B2F",
+            background: "transparent", color: "#556B2F", fontSize: 13, fontWeight: 700, cursor: "pointer",
+            fontFamily: "'Montserrat', sans-serif", transition: "all 0.2s"
           }}
         >
-          Login
+          Wholesaler Login
         </button>
       </div>
 
-      {/* Page content */}
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 24px 48px" }}>
-
-        {/* Section header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      {/* Page Body */}
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 40px 60px" }}>
+        
+        {/* Title & Controls */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 20, marginBottom: 30 }}>
           <div>
-            <h1 style={{
-              fontFamily: "'Georgia', serif", fontSize: 26, fontWeight: 700,
-              color: "#1A1A16", margin: 0, marginBottom: 4,
-            }}>Edible Oils</h1>
-            <p style={{ fontSize: 13, color: "#8A8880", margin: 0 }}>
-              Wholesale quantities · Login to view prices
+            <h1 style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 32, fontWeight: 800, color: "#2B2B2B", margin: 0, marginBottom: 6 }}>
+              Premium Edible Oils
+            </h1>
+            <p style={{ fontSize: 14, color: "#7A8279", margin: 0 }}>
+              Single-origin cold-pressed and refined oils of superior purity. Login to view wholesale rates and bulk specifications.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid #DEDAD4", background: "#fff", fontSize: 16, cursor: "pointer" }}>‹</button>
-            <button style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid #DEDAD4", background: "#fff", fontSize: 16, cursor: "pointer" }}>›</button>
+
+          {/* Search bar */}
+          <div style={{ position: "relative", minWidth: 260 }}>
+            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#7A8279", fontSize: 14 }}>🔍</span>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search oils..."
+              style={{
+                width: "100%", padding: "10px 12px 10px 36px", borderRadius: 8,
+                border: "1px solid rgba(85,107,47,0.15)", background: "#FAF7F2", fontSize: 13,
+                color: "#2B2B2B", fontFamily: "'Poppins', sans-serif", boxSizing: "border-box", outline: "none"
+              }}
+            />
           </div>
         </div>
 
-        {/* Login banner */}
+        {/* Warning Banner */}
         <div style={{
-          background: "#FFF8EC", border: "1px solid #FAD97A", borderRadius: 12,
-          padding: "13px 18px", marginBottom: 24, display: "flex", alignItems: "center",
-          justifyContent: "space-between", gap: 12,
+          background: "#FAF7F2", border: "1.5px solid #D4A017", borderRadius: 12,
+          padding: "16px 20px", marginBottom: 30, display: "flex", alignItems: "center",
+          justifyContent: "space-between", gap: 12, boxShadow: "0 4px 15px rgba(212,160,23,0.05)"
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 20 }}>💡</span>
-            <span style={{ fontSize: 13, color: "#6A4A10" }}>
-              <strong>Wholesale prices are hidden.</strong> Login or create an account to see prices and place bulk orders.
+            <span style={{ fontSize: 13, color: "#2B2B2B", lineHeight: 1.6 }}>
+              <strong>B2B wholesale pricing is hidden.</strong> If you are a registered partner, please log in. New partners can contact us directly.
             </span>
           </div>
           <button
             onClick={() => setShowModal(true)}
             style={{
-              padding: "7px 18px", borderRadius: 8, border: "none",
-              background: "#E8960A", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0,
+              padding: "8px 18px", borderRadius: 6, border: "none",
+              background: "#D4A017", color: "#FAF7F2", fontSize: 13, fontWeight: 700, cursor: "pointer",
+              fontFamily: "'Montserrat', sans-serif", transition: "all 0.2s"
             }}
           >
-            Login now
+            Login Now
           </button>
         </div>
 
-        {/* Oil cards grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
-          {oils.map(oil => (
-            <OilCard key={oil.id} oil={oil} onAdd={() => setShowModal(true)} />
-          ))}
-        </div>
+        {/* Cards Grid */}
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "60px 0", color: "#7A8279", fontSize: 15 }}>
+            No oils found matching your search.
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 24 }}>
+            {filtered.map(oil => (
+              <OilCard key={oil.id} oil={oil} onAdd={() => setShowModal(true)} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

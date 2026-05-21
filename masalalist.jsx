@@ -1,20 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 
 const MASALA_META = {
-  Turmeric: { emoji: "🟡", accent: "#D49B15", bg: "#FFF9E8", border: "#F0DA8F", image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&q=80" },
+  Chicken: { emoji: "🍗", accent: "#A8541F", bg: "#FCEEDF", border: "#EDC09A", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
+  Mutton: { emoji: "🥩", accent: "#8B2A2A", bg: "#FBE9E9", border: "#E5B5B5", image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400&q=80" },
+  Kabab: { emoji: "🫙", accent: "#8C4C2F", bg: "#FBF3EE", border: "#E9C9B6", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" },
+  Dhania: { emoji: "🌿", accent: "#3F8A4D", bg: "#F0F8EF", border: "#BFE0C2", image: "https://images.unsplash.com/photo-1599909533601-fc01a2d5e9a7?w=400&q=80" },
   "Red Chilli": { emoji: "🌶️", accent: "#C0392B", bg: "#FFF3F0", border: "#F4C1B8", image: "https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=400&q=80" },
-  "Gram Masala": { emoji: "🫙", accent: "#8C4C2F", bg: "#FBF3EE", border: "#E9C9B6", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
-  "Garam Masala": { emoji: "🫙", accent: "#8C4C2F", bg: "#FBF3EE", border: "#E9C9B6", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
-  "Dhaniya Powder": { emoji: "🌿", accent: "#3F8A4D", bg: "#F0F8EF", border: "#BFE0C2", image: "https://images.unsplash.com/photo-1599909533601-fc01a2d5e9a7?w=400&q=80" },
-  "Kitchen King": { emoji: "👑", accent: "#7A2E5D", bg: "#FBF0F7", border: "#E7BED7", image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400&q=80" },
-  "Rasam Powder": { emoji: "🍲", accent: "#B05030", bg: "#FFF1EC", border: "#F0C7B5", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" },
-  "Sambhar Powder": { emoji: "🥣", accent: "#A4471D", bg: "#FFF1E5", border: "#F0C5A2", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" },
-  "Chaat Masala": { emoji: "🥗", accent: "#5C8A2F", bg: "#F4F8E8", border: "#D2E0AE", image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400&q=80" },
-  "Puliyogere Powder": { emoji: "🍛", accent: "#9C5E1A", bg: "#FBF2E2", border: "#E6CB95", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" },
-  "Egg Masala": { emoji: "🍳", accent: "#C58F1B", bg: "#FFF7E6", border: "#F0D89A", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
-  "Mutton Masala": { emoji: "🥩", accent: "#8B2A2A", bg: "#FBE9E9", border: "#E5B5B5", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
-  "Fish Masala": { emoji: "🐟", accent: "#1D6E8C", bg: "#E8F4F9", border: "#B6D9E5", image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400&q=80" },
-  "Chicken Masala": { emoji: "🍗", accent: "#A8541F", bg: "#FCEEDF", border: "#EDC09A", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" }
+  Turmeric: { emoji: "🟡", accent: "#D49B15", bg: "#FFF9E8", border: "#F0DA8F", image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&q=80" },
+  "Garam Masala": { emoji: "🫙", accent: "#7A2E5D", bg: "#FBF0F7", border: "#E7BED7", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
+  Rasam: { emoji: "🍲", accent: "#B05030", bg: "#FFF1EC", border: "#F0C7B5", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" },
+  Sambar: { emoji: "🥣", accent: "#A4471D", bg: "#FFF1E5", border: "#F0C5A2", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" }
 };
 
 const FALLBACK_META = { emoji: "🌶️", accent: "#8C4C2F", bg: "#FBF3EE", border: "#E9C9B6", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" };
@@ -42,9 +37,16 @@ function HomePage({ masalas, onSelect, cart, onPlaceOrder, placing, success }) {
   return (
     <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", minHeight: "100vh", background: "#FBF8F4" }}>
       <div style={{ background: "#fff", borderBottom: "1px solid #EDE4DC", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10 }}>
-        <div>
-          <div style={{ fontFamily: "'Georgia', serif", fontSize: 20, fontWeight: 700, color: "#1A1A16" }}>Akalwadi Spices</div>
-          <div style={{ fontSize: 11, color: "#8A8880", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "system-ui" }}>Wholesale Spice Range</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }} onClick={() => localNavigate("/")}>
+          <div style={{
+            background: "#556B2F", borderRadius: "50%", width: "42px", height: "42px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "16px", fontWeight: "700", color: "#FAF7F2", fontFamily: "'Playfair Display', serif"
+          }}>AA</div>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B2B", letterSpacing: "0.03em", fontFamily: "'Playfair Display', serif", lineHeight: "1.1" }}>Akalwadi</div>
+            <div style={{ fontSize: "9px", color: "#7A8279", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: "600", marginTop: "1px" }}>Associates</div>
+          </div>
         </div>
         {totalItems > 0 && (
           <div style={{ background: "#1A1A16", color: "#fff", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontFamily: "system-ui" }}>
