@@ -61,7 +61,18 @@ export default function UserType({ onBack, onSelect, onLoginSuccess, selectedTyp
   return (
     <div className="user-type-page">
       <div className="user-type-panel">
-        <div className="user-type-brand">AKALWADI ASSOCIATES</div>
+        <div className="user-type-brand" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "8px" }}>
+          <div style={{
+            background: "#556B2F", borderRadius: "50%", width: "46px", height: "46px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "18px", fontWeight: "700", color: "#FAF7F2", fontFamily: "'Playfair Display', serif",
+            flexShrink: 0
+          }}>AA</div>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: "18px", fontWeight: "700", color: "#2B2B2B", letterSpacing: "0.03em", fontFamily: "'Playfair Display', serif", lineHeight: "1.1" }}>Akalwadi</div>
+            <div style={{ fontSize: "9px", color: "#7A8279", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: "600", marginTop: "2px" }}>Associates</div>
+          </div>
+        </div>
         <h1>Select User Type</h1>
         <p className="user-type-description">
           Choose the role you want to continue with and proceed to the next step.
@@ -77,17 +88,17 @@ export default function UserType({ onBack, onSelect, onLoginSuccess, selectedTyp
                 onClick={() => handleRoleSelect("")}
                 style={{
                   background: "none",
-                  border: "1.5px solid #e8960a",
+                  border: "1.5px solid var(--accent)",
                   borderRadius: 20,
                   padding: "6px 14px",
                   fontSize: 12,
-                  color: "#e8960a",
+                  color: "var(--accent)",
                   cursor: "pointer",
                   fontWeight: 600,
                   transition: "all 0.15s"
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = "#fff8ec";
+                  e.target.style.background = "rgba(212, 160, 23, 0.08)";
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.background = "none";
@@ -131,7 +142,6 @@ export default function UserType({ onBack, onSelect, onLoginSuccess, selectedTyp
         ) : (
           <div className="user-type-buttons">
             <button onClick={() => handleRoleSelect("Admin")}>Admin</button>
-            <button onClick={() => handleRoleSelect("Driver")}>Driver</button>
             <button onClick={() => handleRoleSelect("Wholesaler")}>Wholesaler</button>
             <button onClick={() => handleRoleSelect("Manager")}>Manager</button>
           </div>

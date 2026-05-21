@@ -16,6 +16,11 @@ export default function ManagerDashboard({ onNavigate }) {
   const [editPrice, setEditPrice] = useState("");
   const [editStock, setEditStock] = useState("");
 
+  // Low Stock States
+  const [showLowStockModal, setShowLowStockModal] = useState(false);
+  const [lowStockAlerted, setLowStockAlerted] = useState(false);
+  const [lowStockItems, setLowStockItems] = useState([]);
+
   // Add Product modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [newType, setNewType] = useState("Oil");
@@ -45,6 +50,14 @@ export default function ManagerDashboard({ onNavigate }) {
       const data = await response.json();
       setInventory(data);
       setInvError("");
+
+      // Identify low stock items (stock <= 10)
+      const lowStock = data.filter(item => Number(item.stock) <= 10);
+      setLowStockItems(lowStock);
+      if (lowStock.length > 0 && !lowStockAlerted) {
+        setShowLowStockModal(true);
+        setLowStockAlerted(true);
+      }
     } catch (err) {
       setInvError(err.message || "Failed to load inventory");
     } finally {
@@ -253,6 +266,51 @@ export default function ManagerDashboard({ onNavigate }) {
             ← Back to Dashboard
           </button>
         </div>
+
+        {/* LOW STOCK WARNING BANNER */}
+        {lowStockItems.length > 0 && (
+          <div style={{
+            background: "linear-gradient(135deg, #FFF9F2 0%, #FFF3E0 100%)",
+            border: "1.5px solid #FFD180",
+            borderRadius: 16,
+            padding: "16px 24px",
+            marginBottom: 28,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: "0 6px 20px rgba(255, 171, 0, 0.08)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <span style={{ fontSize: 24 }}>⚠️</span>
+              <div>
+                <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#E65100" }}>Critical Low Stock Warning</h4>
+                <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#E65100", opacity: 0.85 }}>
+                  The following items have less than 10% stock remaining: <strong>{lowStockItems.map(item => item.name).join(", ")}</strong>. Please restock immediately!
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowLowStockModal(true)}
+              style={{
+                padding: "8px 16px",
+                background: "#E65100",
+                color: "#fff",
+                border: "none",
+                borderRadius: 10,
+                fontWeight: 700,
+                fontSize: 12,
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(230, 81, 0, 0.2)",
+                transition: "all 0.15s",
+                whiteSpace: "nowrap"
+              }}
+              onMouseEnter={(e) => e.target.style.background = "#BF360C"}
+              onMouseLeave={(e) => e.target.style.background = "#E65100"}
+            >
+              Details &rarr;
+            </button>
+          </div>
+        )}
 
         {/* Dynamic Tabs */}
         <div style={{ display: "flex", borderBottom: "2px solid #EDEAE4", gap: 24, marginBottom: 28 }}>
@@ -596,7 +654,6 @@ export default function ManagerDashboard({ onNavigate }) {
           </div>
         )}
       </div>
-
       {/* ADD PRODUCT MODAL */}
       {showAddModal && (
         <div style={{
@@ -637,7 +694,7 @@ export default function ManagerDashboard({ onNavigate }) {
               <div style={{ marginBottom: 16 }}>
                 <label style={{ fontSize: 11, color: "#8A8880", textTransform: "uppercase", fontWeight: 700, display: "block", marginBottom: 6 }}>Catalog Category</label>
                 <div style={{ display: "flex", gap: 10 }}>
-                  {["Oil", "Masala", "Toiletry"].map((t) => (
+                  {["Oil", "Masala"].map((t) => (
                     <button
                       key={t}
                       type="button"
@@ -766,6 +823,153 @@ export default function ManagerDashboard({ onNavigate }) {
                 Add Product to Catalogue
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* LOW STOCK PREMIUM GLASSMORPHIC OVERLAY MODAL */}
+      {showLowStockModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(26, 26, 22, 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 200,
+          backdropFilter: "blur(12px)"
+        }}>
+          <div style={{
+            background: "rgba(255, 255, 255, 0.85)",
+            border: "1.5px solid rgba(255, 171, 0, 0.3)",
+            borderRadius: 24,
+            padding: "36px",
+            width: "100%",
+            maxWidth: 520,
+            boxShadow: "0 20px 50px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.6)",
+            backdropFilter: "blur(20px)",
+            textAlign: "center"
+          }}>
+            <div style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #FFB300, #FF6F00)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+              boxShadow: "0 8px 24px rgba(255, 111, 0, 0.3)",
+              fontSize: 32
+            }}>
+              ⚠️
+            </div>
+            
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: "#E65100", margin: "0 0 8px 0", letterSpacing: "-0.5px" }}>
+              Restock Warning
+            </h2>
+            <p style={{ color: "#6A6860", fontSize: 14, margin: "0 0 24px 0", lineHeight: 1.6 }}>
+              Our inventory tracking shows some core essential items have fallen below the <strong>10% threshold</strong> value (10 units or less).
+            </p>
+
+            <div style={{
+              background: "rgba(255, 255, 255, 0.6)",
+              border: "1.5px solid #EDEAE4",
+              borderRadius: 16,
+              overflow: "hidden",
+              marginBottom: 28,
+              textAlign: "left"
+            }}>
+              <div style={{
+                background: "rgba(255, 171, 0, 0.05)",
+                borderBottom: "1px solid #EDEAE4",
+                padding: "10px 16px",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#E65100",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em"
+              }}>
+                Low Stock Catalog Items
+              </div>
+              <div style={{ maxHeight: 200, overflowY: "auto" }}>
+                {lowStockItems.map((item, idx) => (
+                  <div 
+                    key={item._id} 
+                    style={{ 
+                      display: "flex", 
+                      justifyContent: "space-between", 
+                      alignItems: "center", 
+                      padding: "12px 16px",
+                      borderBottom: idx < lowStockItems.length - 1 ? "1px solid #EDEAE4" : "none"
+                    }}
+                  >
+                    <div>
+                      <span style={{ fontWeight: 700, color: "#1A1A16", fontSize: 13 }}>{item.name}</span>
+                      <span style={{ marginLeft: 8, fontSize: 11, color: "#8A8880" }}>({item.pack})</span>
+                    </div>
+                    <span style={{ 
+                      color: "#C0392B", 
+                      background: "#FFF3F0", 
+                      padding: "4px 10px", 
+                      borderRadius: 12, 
+                      fontSize: 11, 
+                      fontWeight: 800 
+                    }}>
+                      {item.stock} Left
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 14 }}>
+              <button
+                onClick={() => setShowLowStockModal(false)}
+                style={{
+                  flex: 1,
+                  padding: "12px 20px",
+                  borderRadius: 12,
+                  border: "1.5px solid #EDEAE4",
+                  background: "#fff",
+                  color: "#4A4840",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  transition: "all 0.15s"
+                }}
+                onMouseEnter={(e) => e.target.style.background = "#FAFAF8"}
+                onMouseLeave={(e) => e.target.style.background = "#fff"}
+              >
+                Acknowledge
+              </button>
+              <button
+                onClick={() => {
+                  setShowLowStockModal(false);
+                  setActiveTab("inventory");
+                }}
+                style={{
+                  flex: 1,
+                  padding: "12px 20px",
+                  borderRadius: 12,
+                  border: "none",
+                  background: "#1A1A16",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  boxShadow: "0 4px 12px rgba(26, 26, 22, 0.15)"
+                }}
+                onMouseEnter={(e) => e.target.style.background = "#3A3A36"}
+                onMouseLeave={(e) => e.target.style.background = "#1A1A16"}
+              >
+                Update Stock Now
+              </button>
+            </div>
           </div>
         </div>
       )}

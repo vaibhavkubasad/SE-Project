@@ -12,7 +12,6 @@ const navItems = [
     label: "Products",
     href: "#products",
     dropdown: [
-      { label: "Toiletries", href: "#products" },
       { label: "Spices", href: MASALA_LIST_PATH },
       { label: "Edible Oil", href: OIL_LIST_PATH }
     ]
@@ -42,13 +41,6 @@ const productCategories = [
     icon: "🌶️",
     description:
       "Authentic Indian masalas, whole and ground spices that carry the flavour of every kitchen."
-  },
-  {
-    name: "Toiletries",
-    path: null,
-    icon: "🧴",
-    description:
-      "Daily personal care essentials kept in steady supply for busy retail counters and households."
   }
 ];
 
@@ -62,7 +54,6 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
       label: "Products",
       href: "#products",
       dropdown: [
-        { label: "Toiletries", href: "#products" },
         { label: "Spices", href: MASALA_LIST_PATH },
         { label: "Edible Oil", href: OIL_LIST_PATH }
       ]
@@ -77,17 +68,24 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
   return (
     <div className="page-shell">
       <header className="hero-section" id="top">
-        <nav className="navbar">
+        <nav className="navbar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
           <a
             href={HOME_PATH}
-            className="brand"
             onClick={(event) => {
               event.preventDefault();
               navigate(HOME_PATH);
             }}
+            style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}
           >
-            <span className="brand-mark">AA</span>
-            <span className="brand-name">AKALWADI ASSOCIATES</span>
+            <div style={{
+              background: "#556B2F", borderRadius: "50%", width: "42px", height: "42px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "16px", fontWeight: "700", color: "#FAF7F2", fontFamily: "'Playfair Display', serif"
+            }}>AA</div>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B2B", letterSpacing: "0.03em", fontFamily: "'Playfair Display', serif", lineHeight: "1.1" }}>Akalwadi</div>
+              <div style={{ fontSize: "9px", color: "#7A8279", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: "600", marginTop: "1px" }}>Associates</div>
+            </div>
           </a>
 
           <ul className="nav-links">
@@ -235,7 +233,7 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
                   <a
                     href="/orders"
                     className="secondary-button"
-                    style={{ marginLeft: 10, background: "#1A1A16", color: "#fff" }}
+                    style={{ background: "#1A1A16", color: "#fff", borderColor: "#1A1A16" }}
                     onClick={(event) => {
                       event.preventDefault();
                       navigate("/orders");
@@ -251,23 +249,23 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
           <div className="hero-visual" aria-hidden="true">
             <div className="hero-card">
               <div className="hero-card-row">
-                <div className="hero-tile hero-tile-oil">
+                <div className="hero-tile hero-tile-oil" onClick={() => navigate(OIL_LIST_PATH)} style={{ cursor: "pointer" }}>
                   <span className="hero-tile-icon">🛢️</span>
                   <span>Edible Oil</span>
                 </div>
-                <div className="hero-tile hero-tile-spice">
+                <div className="hero-tile hero-tile-spice" onClick={() => navigate(MASALA_LIST_PATH)} style={{ cursor: "pointer" }}>
                   <span className="hero-tile-icon">🌶️</span>
                   <span>Spices</span>
                 </div>
               </div>
               <div className="hero-card-row">
-                <div className="hero-tile hero-tile-toiletries">
-                  <span className="hero-tile-icon">🧴</span>
-                  <span>Toiletries</span>
-                </div>
                 <div className="hero-tile hero-tile-supply">
                   <span className="hero-tile-icon">🚚</span>
                   <span>Daily Supply</span>
+                </div>
+                <div className="hero-tile hero-tile-supply">
+                  <span className="hero-tile-icon">📦</span>
+                  <span>Wholesale</span>
                 </div>
               </div>
             </div>
@@ -316,8 +314,8 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
           <article className="detail-card">
             <h2>Business Details</h2>
             <p>
-              Akalwadi Associates — wholesalers and distributors of oil,
-              spices and toiletries.
+              Akalwadi Associates — wholesalers and distributors of oil
+              and spices.
             </p>
             <p>
               <strong>Address:</strong> Dharwad, Karnataka, India

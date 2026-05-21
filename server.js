@@ -5,6 +5,14 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import bcrypt from "bcryptjs";
+import https from "https";
+
+
+function makeFlexibleRegexString(str) {
+    if (!str) return "^$";
+    const clean = String(str).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/\s+/g, '');
+    return '^' + clean.split('').join('\\s*') + '$';
+}
 
 const PORT = process.env.PORT || 5000;
 
@@ -43,15 +51,10 @@ app.get("/api/masalas", async (_req, res) => {
     }
 });
 
-app.get("/api/toiletries", async (_req, res) => {
-    try {
-        const toiletries = await productDb.collection("TOILETRIES").find().toArray();
-        res.json(toiletries);
-    } catch (err) {
-        console.error("toiletries error:", err);
-        res.status(500).json({ msg: "Failed to load toiletries" });
-    }
-});
+
+
+
+
 
 const COLLECTION_BY_ROLE = {
     Wholesaler: "WHOLESALERS",
@@ -107,15 +110,21 @@ app.post("/api/login", async (req, res) => {
 // ==========================================
 app.get("/api/drivers", async (req, res) => {
     try {
-        const drivers = await userDb.collection("DRIVERS").find().toArray();
-        if (drivers.length === 0) {
-            // Seed default drivers if empty
-            return res.json([
-                { name: "Ramesh Kumar" },
-                { name: "Suresh Singh" },
-                { name: "Mahesh Patil" }
-            ]);
+        const defaultDrivers = [
+            { name: "Ramesh Kumar", phone: "+918762983290" },
+            { name: "Suresh Singh", phone: "+917349197149" },
+            { name: "Mahesh Patil", phone: "+918431309384" }
+        ];
+
+        for (const drv of defaultDrivers) {
+            await userDb.collection("DRIVERS").updateOne(
+                { name: { $regex: `^${drv.name}$`, $options: "i" } },
+                { $set: { name: drv.name, phone: drv.phone } },
+                { upsert: true }
+            );
         }
+
+        const drivers = await userDb.collection("DRIVERS").find().toArray();
         res.json(drivers);
     } catch (err) {
         console.error("drivers get error:", err);
@@ -160,14 +169,22 @@ app.post("/api/orders", async (req, res) => {
         for (const item of items) {
             const qty = Number(item.qty) || 1;
             if (item.oilName) {
-                const formattedType = item.oilName.replace(" Oil", "").trim();
+                const formattedType = item.oilName.replace(/\s*[Oo]il\s*$/, "").trim();
                 await productDb.collection("OIL").updateOne(
-                    { companyName: item.brand, oilType: formattedType, quantity: item.pack },
+                    {
+                        companyName: { $regex: makeFlexibleRegexString(item.brand), $options: "i" },
+                        oilType: { $regex: makeFlexibleRegexString(formattedType), $options: "i" },
+                        quantity: { $regex: makeFlexibleRegexString(item.pack), $options: "i" }
+                    },
                     { $inc: { stock: -qty } }
                 );
             } else if (item.name) {
+                // Decrement masala stock
                 await productDb.collection("MASALA").updateOne(
-                    { name: item.name, weight: item.pack },
+                    {
+                        name: { $regex: makeFlexibleRegexString(item.name), $options: "i" },
+                        weight: { $regex: makeFlexibleRegexString(item.pack), $options: "i" }
+                    },
                     { $inc: { stock: -qty } }
                 );
             }
@@ -192,6 +209,79 @@ app.get("/api/orders", async (req, res) => {
     }
 });
 
+// ==========================================
+// Twilio SMS Helper Function
+// ==========================================
+async function sendSMS(to, body) {
+    if (!to) return { success: false, reason: "No recipients" };
+
+    // Support comma-separated list of numbers
+    const recipients = String(to).split(",").map(n => n.trim()).filter(Boolean);
+    if (recipients.length > 1) {
+        console.log(`[Twilio] Multiple recipients detected: ${recipients.join(", ")}`);
+        const promises = recipients.map(recipient => sendSMS(recipient, body));
+        const results = await Promise.all(promises);
+        return { success: results.every(r => r.success), results };
+    }
+
+    const singleTo = recipients[0];
+
+    return new Promise((resolve) => {
+        const sid = process.env.TWILIO_ACCOUNT_SID;
+        const token = process.env.TWILIO_AUTH_TOKEN;
+        const from = process.env.TWILIO_FROM_NUMBER;
+
+        if (!sid || !token || !from) {
+            console.warn("[Twilio] Credentials or from number are missing in .env. SMS skipped.");
+            return resolve({ success: false, reason: "Credentials missing" });
+        }
+
+        const authHeader = "Basic " + Buffer.from(`${sid}:${token}`).toString("base64");
+        const postData = new URLSearchParams({
+            To: singleTo,
+            From: from,
+            Body: body
+        }).toString();
+
+        const options = {
+            hostname: "api.twilio.com",
+            port: 443,
+            path: `/2010-04-01/Accounts/${sid}/Messages.json`,
+            method: "POST",
+            headers: {
+                "Authorization": authHeader,
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Content-Length": Buffer.byteLength(postData)
+            }
+        };
+
+        console.log(`[Twilio] Sending SMS to ${singleTo}...`);
+        const req = https.request(options, (res) => {
+            let data = "";
+            res.on("data", (chunk) => { data += chunk; });
+            res.on("end", () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    const parsed = JSON.parse(data);
+                    console.log(`[Twilio] SMS sent successfully. Message SID: ${parsed.sid}`);
+                    resolve({ success: true, sid: parsed.sid });
+                } else {
+                    console.error("[Twilio] Error response from Twilio:", data);
+                    resolve({ success: false, error: data });
+                }
+            });
+        });
+
+        req.on("error", (err) => {
+            console.error("[Twilio] Exception while sending SMS:", err);
+            resolve({ success: false, error: err.message });
+        });
+
+        req.write(postData);
+        req.end();
+    });
+}
+
+
 app.put("/api/orders/:id/assign", async (req, res) => {
     try {
         const { id } = req.params;
@@ -203,6 +293,44 @@ app.put("/api/orders/:id/assign", async (req, res) => {
             { _id: new mongoose.Types.ObjectId(id) },
             { $set: { driverName, status: "Assigned" } }
         );
+
+        // Fetch driver details to get the phone number using regex
+        const driver = await userDb.collection("DRIVERS").findOne({ name: { $regex: makeFlexibleRegexString(driverName), $options: "i" } });
+        
+        if (driver) {
+            await userDb.collection("ORDERS").updateOne(
+                { _id: new mongoose.Types.ObjectId(id) },
+                { $set: { driverName: driver.name } }
+            );
+        }
+        
+        // Fetch order details for the SMS body
+        const order = await userDb.collection("ORDERS").findOne({ _id: new mongoose.Types.ObjectId(id) });
+
+        if (driver && driver.phone && order) {
+            const formattedTotal = "₹" + Number(order.totalAmount).toLocaleString("en-IN");
+            
+            // Fetch wholesaler details
+            const wholesaler = await userDb.collection("WHOLESALERS").findOne({ name: order.wholesalerName });
+            const addressInfo = wholesaler && wholesaler.address ? `, Address: ${wholesaler.address}` : "";
+            
+            // 1. Send SMS to Driver
+            const smsMessage = `[Akalwadi Associates] Hello ${driver.name}, you have been assigned to deliver order for "${order.wholesalerName}". Amount: ${formattedTotal}${addressInfo}.`;
+            sendSMS(driver.phone, smsMessage).catch(err => {
+                console.error("Async driver SMS sending failed:", err);
+            });
+
+            // 2. Send SMS to Wholesaler (Customer) if they have a phone number registered
+            if (wholesaler && wholesaler.phone) {
+                const wholesalerMessage = `[Akalwadi Associates] Hello ${wholesaler.name}, driver ${driver.name} (Phone: ${driver.phone}) has been assigned to deliver your order of ${formattedTotal}.`;
+                sendSMS(wholesaler.phone, wholesalerMessage).catch(err => {
+                    console.error("Async wholesaler SMS sending failed:", err);
+                });
+            }
+        } else {
+            console.log(`SMS not sent. Driver found: ${!!driver}, Has phone: ${driver ? !!driver.phone : false}, Order found: ${!!order}`);
+        }
+
         res.json({ msg: "Driver assigned successfully" });
     } catch (err) {
         console.error("assign driver error:", err);
@@ -235,7 +363,6 @@ app.get("/api/inventory", async (req, res) => {
     try {
         const oils = await productDb.collection("OIL").find().toArray();
         const masalas = await productDb.collection("MASALA").find().toArray();
-        const toiletries = await productDb.collection("TOILETRIES").find().toArray();
 
         const oilItems = oils.map(o => ({
             _id: o._id,
@@ -257,16 +384,7 @@ app.get("/api/inventory", async (req, res) => {
             stock: m.stock !== undefined ? m.stock : 100
         }));
 
-        const toiletryItems = toiletries.map(t => ({
-            _id: t._id,
-            type: "Toiletry",
-            name: t.name,
-            pack: t.quantity || "1 Pack",
-            price: t.price,
-            stock: t.stock !== undefined ? t.stock : 100
-        }));
-
-        res.json([...oilItems, ...masalaItems, ...toiletryItems]);
+        res.json([...oilItems, ...masalaItems]);
     } catch (err) {
         console.error("get inventory error:", err);
         res.status(500).json({ msg: "Failed to load inventory" });
@@ -298,13 +416,6 @@ app.post("/api/inventory/:type", async (req, res) => {
             const newItem = { name, weight, price: Number(price), stock: newStock };
             await productDb.collection("MASALA").insertOne(newItem);
             return res.json({ msg: "Masala item added successfully", item: newItem });
-        } else if (type.toLowerCase() === "toiletry") {
-            if (!name || !quantity) {
-                return res.status(400).json({ msg: "Name and quantity are required for Toiletry" });
-            }
-            const newItem = { name, quantity, price: Number(price), stock: newStock };
-            await productDb.collection("TOILETRIES").insertOne(newItem);
-            return res.json({ msg: "Toiletry item added successfully", item: newItem });
         } else {
             res.status(400).json({ msg: `Unsupported item type: ${type}` });
         }
@@ -329,8 +440,7 @@ app.put("/api/inventory/:type/:id", async (req, res) => {
         if (weight !== undefined) updates.weight = weight;
 
         const targetCollection =
-            type.toLowerCase() === "oil" ? "OIL" :
-            type.toLowerCase() === "masala" ? "MASALA" : "TOILETRIES";
+            type.toLowerCase() === "oil" ? "OIL" : "MASALA";
 
         await productDb.collection(targetCollection).updateOne(
             { _id: new mongoose.Types.ObjectId(id) },
@@ -348,8 +458,7 @@ app.delete("/api/inventory/:type/:id", async (req, res) => {
     try {
         const { type, id } = req.params;
         const targetCollection =
-            type.toLowerCase() === "oil" ? "OIL" :
-            type.toLowerCase() === "masala" ? "MASALA" : "TOILETRIES";
+            type.toLowerCase() === "oil" ? "OIL" : "MASALA";
 
         await productDb.collection(targetCollection).deleteOne({ _id: new mongoose.Types.ObjectId(id) });
         res.json({ msg: "Item deleted successfully" });
@@ -383,7 +492,7 @@ app.get("/api/analytics/sales", async (req, res) => {
         const avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
 
         // Sales by category
-        const categoryMap = { Oil: 0, Masala: 0, Toiletry: 0 };
+        const categoryMap = { Oil: 0, Masala: 0 };
         const brandMap = {};
 
         for (const order of orders) {
@@ -396,7 +505,7 @@ app.get("/api/analytics/sales", async (req, res) => {
                     const brand = item.brand || "Unknown";
                     brandMap[brand] = (brandMap[brand] || 0) + lineTotal;
                 } else if (item.name) {
-                    // Try to determine if masala or toiletry
+                    // Try to determine if masala
                     categoryMap.Masala += lineTotal;
                     brandMap[item.name] = (brandMap[item.name] || 0) + lineTotal;
                 }
@@ -517,13 +626,18 @@ app.get("/api/staff", async (req, res) => {
 
 app.post("/api/staff", async (req, res) => {
     try {
-        const { name, password, role } = req.body || {};
+        const { name, password, role, phone } = req.body || {};
         if (!name || !password || !role) {
             return res.status(400).json({ msg: "Name, password and role are required" });
         }
 
         const collection = role === "Manager" ? "MANAGER" : "DRIVERS";
-        const newStaff = { name, password, createdAt: new Date() };
+        const newStaff = { 
+            name, 
+            password, 
+            createdAt: new Date(),
+            ...(role === "Driver" ? { phone: phone || "" } : {})
+        };
         await userDb.collection(collection).insertOne(newStaff);
 
         const { password: _omit, ...safeStaff } = newStaff;
@@ -543,6 +657,43 @@ app.delete("/api/staff/:role/:id", async (req, res) => {
     } catch (err) {
         console.error("delete staff error:", err);
         res.status(500).json({ msg: "Failed to remove staff" });
+    }
+});
+
+app.put("/api/staff/:role/:id", async (req, res) => {
+    try {
+        const { role, id } = req.params;
+        const { name, phone, password } = req.body || {};
+
+        const collection = role === "Manager" ? "MANAGER" : "DRIVERS";
+
+        const oldStaff = await userDb.collection(collection).findOne({ _id: new mongoose.Types.ObjectId(id) });
+        if (!oldStaff) {
+            return res.status(404).json({ msg: "Staff member not found" });
+        }
+
+        const updates = {};
+        if (name !== undefined) updates.name = name;
+        if (password !== undefined && password !== "") updates.password = password;
+        if (role === "Driver" && phone !== undefined) updates.phone = phone;
+
+        await userDb.collection(collection).updateOne(
+            { _id: new mongoose.Types.ObjectId(id) },
+            { $set: updates }
+        );
+
+        // Update driverName on orders if name changes to preserve history
+        if (role === "Driver" && name && oldStaff.name !== name) {
+            await userDb.collection("ORDERS").updateMany(
+                { driverName: oldStaff.name },
+                { $set: { driverName: name } }
+            );
+        }
+
+        res.json({ msg: `${role} updated successfully` });
+    } catch (err) {
+        console.error("update staff error:", err);
+        res.status(500).json({ msg: "Failed to update staff" });
     }
 });
 

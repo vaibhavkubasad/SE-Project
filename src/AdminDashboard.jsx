@@ -380,7 +380,7 @@ function ManageStoreTab() {
 // ==========================================
 // STAFF TAB
 // ==========================================
-function StaffTab() {
+export function StaffTab() {
   const [staff, setStaff] = useState([]);
   const [performance, setPerformance] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -389,6 +389,13 @@ function StaffTab() {
   const [newName, setNewName] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState("Manager");
+  const [newPhone, setNewPhone] = useState("");
+
+  // Edit staff states
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editPassword, setEditPassword] = useState("");
 
   async function fetchAll() {
     try {
@@ -407,15 +414,41 @@ function StaffTab() {
   async function handleAddStaff(e) {
     e.preventDefault();
     if (!newName || !newPassword) return alert("Name and password required");
+    if (newRole === "Driver" && !newPhone) return alert("Phone number is required for Driver");
     try {
       const res = await fetch("/api/staff", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName, password: newPassword, role: newRole })
+        body: JSON.stringify({ 
+          name: newName, 
+          password: newPassword, 
+          role: newRole,
+          ...(newRole === "Driver" ? { phone: newPhone } : {})
+        })
       });
       if (!res.ok) throw new Error("Failed");
       setShowAddModal(false);
-      setNewName(""); setNewPassword(""); setNewRole("Manager");
+      setNewName(""); setNewPassword(""); setNewRole("Manager"); setNewPhone("");
+      fetchAll();
+    } catch (err) { alert(err.message); }
+  }
+
+  async function handleSaveEdit(member) {
+    if (!editName) return alert("Name is required");
+    if (member.role === "Driver" && !editPhone) return alert("Phone number is required");
+    try {
+      const res = await fetch(`/api/staff/${member.role}/${member._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName,
+          phone: member.role === "Driver" ? editPhone : undefined,
+          password: editPassword || undefined
+        })
+      });
+      if (!res.ok) throw new Error("Failed to update staff member");
+      setEditingId(null);
+      setEditPassword("");
       fetchAll();
     } catch (err) { alert(err.message); }
   }
@@ -467,6 +500,7 @@ function StaffTab() {
                 <th style={{ padding: "16px 20px" }}>#</th>
                 <th style={{ padding: "16px 20px" }}>Name</th>
                 <th style={{ padding: "16px 20px" }}>Role</th>
+                <th style={{ padding: "16px 20px" }}>Phone</th>
                 <th style={{ padding: "16px 20px" }}>Performance</th>
                 <th style={{ padding: "16px 20px", textAlign: "right" }}>Actions</th>
               </tr>
@@ -474,21 +508,40 @@ function StaffTab() {
             <tbody>
               {staff.map((member, idx) => {
                 const perf = getPerf(member.name);
+                const isEditing = editingId === member._id;
                 return (
                   <tr key={member._id} style={{ borderBottom: "1px solid #EDEAE4" }}>
                     <td style={{ padding: "16px 20px", color: "#8A8880", fontWeight: 600 }}>{idx + 1}</td>
-                    <td style={{ padding: "16px 20px", fontWeight: 700, color: "#1A1A16" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{
-                          width: 34, height: 34, borderRadius: "50%",
-                          background: member.role === "Manager" ? "linear-gradient(135deg, #6366F1, #A78BFA)" : "linear-gradient(135deg, #1D9E75, #34D399)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          color: "#fff", fontSize: 14, fontWeight: 800
-                        }}>
-                          {member.name.charAt(0).toUpperCase()}
+                    <td style={{ padding: "16px 20px" }}>
+                      {isEditing ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          <input 
+                            value={editName} 
+                            onChange={e => setEditName(e.target.value)} 
+                            style={{ ...inputStyle, width: 160 }} 
+                            placeholder="Full Name" 
+                          />
+                          <input 
+                            type="password" 
+                            value={editPassword} 
+                            onChange={e => setEditPassword(e.target.value)} 
+                            style={{ ...inputStyle, width: 160, fontSize: 11, padding: "6px 10px" }} 
+                            placeholder="New Password (optional)" 
+                          />
                         </div>
-                        {member.name}
-                      </div>
+                      ) : (
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{
+                            width: 34, height: 34, borderRadius: "50%",
+                            background: member.role === "Manager" ? "linear-gradient(135deg, #6366F1, #A78BFA)" : "linear-gradient(135deg, #1D9E75, #34D399)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: "#fff", fontSize: 14, fontWeight: 800
+                          }}>
+                            {member.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span style={{ fontWeight: 700, color: "#1A1A16" }}>{member.name}</span>
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: "16px 20px" }}>
                       <span style={{
@@ -498,6 +551,20 @@ function StaffTab() {
                       }}>
                         {member.role === "Manager" ? "👔" : "🚚"} {member.role}
                       </span>
+                    </td>
+                    <td style={{ padding: "16px 20px", color: "#4A4840", fontWeight: 500 }}>
+                      {isEditing ? (
+                        member.role === "Driver" ? (
+                          <input 
+                            value={editPhone} 
+                            onChange={e => setEditPhone(e.target.value)} 
+                            style={{ ...inputStyle, width: 130 }} 
+                            placeholder="Phone number" 
+                          />
+                        ) : "—"
+                      ) : (
+                        member.role === "Driver" ? (member.phone || "—") : "—"
+                      )}
                     </td>
                     <td style={{ padding: "16px 20px" }}>
                       {member.role === "Driver" && perf ? (
@@ -524,15 +591,39 @@ function StaffTab() {
                       )}
                     </td>
                     <td style={{ padding: "16px 20px", textAlign: "right" }}>
-                      <button
-                        onClick={() => handleRemove(member)}
-                        style={{
-                          padding: "6px 14px", border: "none", background: "#FFF3F0",
-                          color: "#C0392B", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 12
-                        }}
-                      >
-                        Remove
-                      </button>
+                      {isEditing ? (
+                        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                          <button 
+                            onClick={() => handleSaveEdit(member)} 
+                            style={{ padding: "6px 14px", border: "none", background: "#1D9E75", color: "#fff", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 12 }}
+                          >Save</button>
+                          <button 
+                            onClick={() => setEditingId(null)} 
+                            style={{ padding: "6px 14px", border: "1px solid #CCCAC5", background: "#fff", color: "#4A4840", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 12 }}
+                          >Cancel</button>
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                          <button
+                            onClick={() => { 
+                              setEditingId(member._id); 
+                              setEditName(member.name); 
+                              setEditPhone(member.phone || ""); 
+                              setEditPassword(""); 
+                            }}
+                            style={{ padding: "6px 14px", border: "1px solid #CCCAC5", background: "#fff", color: "#4A4840", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 12 }}
+                          >Edit</button>
+                          <button
+                            onClick={() => handleRemove(member)}
+                            style={{
+                              padding: "6px 14px", border: "none", background: "#FFF3F0",
+                              color: "#C0392B", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 12
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -583,6 +674,12 @@ function StaffTab() {
                 <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>Full Name *</label>
                 <input value={newName} onChange={e => setNewName(e.target.value)} required style={inputStyle} placeholder="Enter staff name" />
               </div>
+              {newRole === "Driver" && (
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>Phone Number (e.g. +91XXXXXXXXXX) *</label>
+                  <input value={newPhone} onChange={e => setNewPhone(e.target.value)} required={newRole === "Driver"} style={inputStyle} placeholder="Enter driver phone with country code" />
+                </div>
+              )}
               <div style={{ marginBottom: 20 }}>
                 <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>Login Password *</label>
                 <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required style={inputStyle} placeholder="Password for login" />
