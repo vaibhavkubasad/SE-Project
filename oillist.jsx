@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 const OIL_META = {
-  Sunflower: { emoji: "🌻", tagline: "Light & heart-healthy", accent: "#E8A020", bg: "#FFF8EC", border: "#FADDAA", image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80" },
+  Sunflower: { emoji: "🌻", tagline: "Light & heart-healthy", accent: "#E8A020", bg: "#FFF8EC", border: "#FADDAA", image: "/sunfloweroil.jpeg" },
   Coconut: { emoji: "🥥", tagline: "Pure & aromatic", accent: "#1D9E75", bg: "#F0FBF6", border: "#A0DFC5", image: "https://images.unsplash.com/photo-1621236378699-8c4a0a9a8d39?w=400&q=80" },
   Mustard: { emoji: "🟡", tagline: "Bold & traditional", accent: "#C48A0A", bg: "#FFFBEC", border: "#F5DC90", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
   Groundnut: { emoji: "🥜", tagline: "Rich & flavourful", accent: "#C0613A", bg: "#FFF4F0", border: "#F5C4B0", image: "https://images.unsplash.com/photo-1543362906-acfc16c67564?w=400&q=80" },
@@ -31,7 +31,19 @@ function parseLitres(quantity) {
 function groupOils(rows) {
   const byType = new Map();
   for (const row of rows) {
-    const oilType = row.oilType || "Other";
+    let oilType = row.oilType || "Other";
+    
+    // Normalize and match keys case-insensitively/substring
+    const trimmedType = oilType.trim().toLowerCase();
+    let matchedKey = Object.keys(OIL_META).find(k => {
+      const lowerKey = k.toLowerCase();
+      return trimmedType === lowerKey || trimmedType.includes(lowerKey);
+    });
+
+    if (matchedKey) {
+      oilType = matchedKey;
+    }
+
     if (!byType.has(oilType)) {
       const meta = OIL_META[oilType] || FALLBACK_META;
       byType.set(oilType, {
@@ -43,6 +55,10 @@ function groupOils(rows) {
       });
     }
     const oil = byType.get(oilType);
+    // If this product has a custom uploaded image, use it as the category thumbnail
+    if (row.image) {
+      oil.image = row.image;
+    }
     if (!oil.brands.has(row.companyName)) {
       oil.brands.set(row.companyName, { name: row.companyName, packs: [] });
     }

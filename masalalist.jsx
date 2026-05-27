@@ -296,7 +296,9 @@ function shapeMasalas(rows) {
       price: Number(row.price) || 0,
       grams,
       weightLabel,
-      ...meta
+      ...meta,
+      // Always prefer the custom uploaded image if present
+      image: row.image || meta.image
     };
   });
 }

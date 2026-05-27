@@ -5,7 +5,7 @@ const oils = [
     id: "sunflower",
     name: "Sunflower Oil",
     emoji: "🌻",
-    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80",
+    image: "/sunfloweroil.jpeg",
     discount: "18% OFF",
     brands: ["Gemini", "Fortune", "Saffola", "Sundrop", "Gold Winner"],
     sizes: ["1 L", "2 L", "5 L", "15 L", "50 L"],

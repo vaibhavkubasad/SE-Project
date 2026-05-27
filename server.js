@@ -28,7 +28,7 @@ const productDb = mongoose.connection.useDb("PRODUCT");
 const userDb = mongoose.connection.useDb("USERLOGIN");
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(cors());
 
 app.get("/api/oils", async (_req, res) => {
@@ -382,7 +382,8 @@ app.get("/api/inventory", async (req, res) => {
             oilType: o.oilType,
             pack: o.quantity,
             price: o.price,
-            stock: o.stock !== undefined ? o.stock : 100
+            stock: o.stock !== undefined ? o.stock : 100,
+            image: o.image || o.thumbnail || ""
         }));
 
         const masalaItems = masalas.map(m => ({
@@ -391,7 +392,8 @@ app.get("/api/inventory", async (req, res) => {
             name: m.name,
             pack: m.weight,
             price: m.price,
-            stock: m.stock !== undefined ? m.stock : 100
+            stock: m.stock !== undefined ? m.stock : 100,
+            image: m.image || m.thumbnail || ""
         }));
 
         res.json([...oilItems, ...masalaItems]);
@@ -404,7 +406,7 @@ app.get("/api/inventory", async (req, res) => {
 app.post("/api/inventory/:type", async (req, res) => {
     try {
         const { type } = req.params;
-        const { name, companyName, oilType, quantity, weight, price, stock } = req.body || {};
+        const { name, companyName, oilType, quantity, weight, price, stock, image } = req.body || {};
 
         if (price === undefined || price === "") {
             return res.status(400).json({ msg: "Price is required" });
@@ -416,14 +418,14 @@ app.post("/api/inventory/:type", async (req, res) => {
             if (!companyName || !oilType || !quantity) {
                 return res.status(400).json({ msg: "Company name, oil type and quantity are required for Oil" });
             }
-            const newItem = { companyName, oilType, quantity, price: Number(price), stock: newStock };
+            const newItem = { companyName, oilType, quantity, price: Number(price), stock: newStock, image: image || "" };
             await productDb.collection("OIL").insertOne(newItem);
             return res.json({ msg: "Oil item added successfully", item: newItem });
         } else if (type.toLowerCase() === "masala") {
             if (!name || !weight) {
                 return res.status(400).json({ msg: "Name and weight are required for Masala" });
             }
-            const newItem = { name, weight, price: Number(price), stock: newStock };
+            const newItem = { name, weight, price: Number(price), stock: newStock, image: image || "" };
             await productDb.collection("MASALA").insertOne(newItem);
             return res.json({ msg: "Masala item added successfully", item: newItem });
         } else {
@@ -438,7 +440,7 @@ app.post("/api/inventory/:type", async (req, res) => {
 app.put("/api/inventory/:type/:id", async (req, res) => {
     try {
         const { type, id } = req.params;
-        const { price, stock, companyName, oilType, quantity, name, weight } = req.body || {};
+        const { price, stock, companyName, oilType, quantity, name, weight, image } = req.body || {};
 
         const updates = {};
         if (price !== undefined && price !== "") updates.price = Number(price);
@@ -448,6 +450,7 @@ app.put("/api/inventory/:type/:id", async (req, res) => {
         if (quantity !== undefined) updates.quantity = quantity;
         if (name !== undefined) updates.name = name;
         if (weight !== undefined) updates.weight = weight;
+        if (image !== undefined) updates.image = image;
 
         const targetCollection =
             type.toLowerCase() === "oil" ? "OIL" : "MASALA";
