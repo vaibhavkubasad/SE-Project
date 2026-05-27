@@ -165,28 +165,38 @@ app.post("/api/orders", async (req, res) => {
 
         await userDb.collection("ORDERS").insertOne(newOrder);
 
-        // Decrease stock if stock field exists in inventory
+        // Decrease stock if stock field exists in inventory, fallback to 100 if undefined
         for (const item of items) {
             const qty = Number(item.qty) || 1;
             if (item.oilName) {
                 const formattedType = item.oilName.replace(/\s*[Oo]il\s*$/, "").trim();
-                await productDb.collection("OIL").updateOne(
-                    {
-                        companyName: { $regex: makeFlexibleRegexString(item.brand), $options: "i" },
-                        oilType: { $regex: makeFlexibleRegexString(formattedType), $options: "i" },
-                        quantity: { $regex: makeFlexibleRegexString(item.pack), $options: "i" }
-                    },
-                    { $inc: { stock: -qty } }
-                );
+                const query = {
+                    companyName: { $regex: makeFlexibleRegexString(item.brand), $options: "i" },
+                    oilType: { $regex: makeFlexibleRegexString(formattedType), $options: "i" },
+                    quantity: { $regex: makeFlexibleRegexString(item.pack), $options: "i" }
+                };
+                const doc = await productDb.collection("OIL").findOne(query);
+                if (doc) {
+                    const currentStock = doc.stock !== undefined ? doc.stock : 100;
+                    await productDb.collection("OIL").updateOne(
+                        { _id: doc._id },
+                        { $set: { stock: currentStock - qty } }
+                    );
+                }
             } else if (item.name) {
                 // Decrement masala stock
-                await productDb.collection("MASALA").updateOne(
-                    {
-                        name: { $regex: makeFlexibleRegexString(item.name), $options: "i" },
-                        weight: { $regex: makeFlexibleRegexString(item.pack), $options: "i" }
-                    },
-                    { $inc: { stock: -qty } }
-                );
+                const query = {
+                    name: { $regex: makeFlexibleRegexString(item.name), $options: "i" },
+                    weight: { $regex: makeFlexibleRegexString(item.pack), $options: "i" }
+                };
+                const doc = await productDb.collection("MASALA").findOne(query);
+                if (doc) {
+                    const currentStock = doc.stock !== undefined ? doc.stock : 100;
+                    await productDb.collection("MASALA").updateOne(
+                        { _id: doc._id },
+                        { $set: { stock: currentStock - qty } }
+                    );
+                }
             }
         }
 
