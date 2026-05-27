@@ -110,6 +110,48 @@ app.post("/api/login", async (req, res) => {
 });
 
 // ==========================================
+// NEW: CHANGE PASSWORD API
+// ==========================================
+app.put("/api/change-password", async (req, res) => {
+    try {
+        const { role, id, currentPassword, newPassword } = req.body || {};
+        if (!role || !id || !currentPassword || !newPassword) {
+            return res.status(400).json({ msg: "Role, id, currentPassword, and newPassword are required" });
+        }
+
+        const collectionName = COLLECTION_BY_ROLE[role];
+        if (!collectionName) {
+            return res.status(400).json({ msg: `Unknown role: ${role}` });
+        }
+
+        const user = await userDb.collection(collectionName).findOne({ _id: new mongoose.Types.ObjectId(id) });
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        const stored = String(user.password || "");
+        const isHashed = stored.startsWith("$2");
+        const ok = isHashed
+            ? bcrypt.compareSync(currentPassword, stored)
+            : stored === currentPassword;
+
+        if (!ok) {
+            return res.status(401).json({ msg: "Incorrect current password" });
+        }
+
+        await userDb.collection(collectionName).updateOne(
+            { _id: new mongoose.Types.ObjectId(id) },
+            { $set: { password: String(newPassword).trim() } }
+        );
+
+        res.json({ msg: "Password changed successfully" });
+    } catch (err) {
+        console.error("change password error:", err);
+        res.status(500).json({ msg: "Failed to change password" });
+    }
+});
+
+// ==========================================
 // NEW: DRIVER APIs
 // ==========================================
 app.get("/api/drivers", async (req, res) => {

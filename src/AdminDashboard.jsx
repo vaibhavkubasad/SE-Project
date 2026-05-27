@@ -178,6 +178,7 @@ function ManageStoreTab() {
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editAddress, setEditAddress] = useState("");
+  const [editPassword, setEditPassword] = useState("");
 
   // Add form
   const [newName, setNewName] = useState("");
@@ -221,10 +222,11 @@ function ManageStoreTab() {
       const res = await fetch(`/api/wholesalers/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName, phone: editPhone, address: editAddress })
+        body: JSON.stringify({ name: editName, phone: editPhone, address: editAddress, password: editPassword || undefined })
       });
       if (!res.ok) throw new Error("Failed");
       setEditingId(null);
+      setEditPassword("");
       fetchStores();
     } catch (err) { alert(err.message); }
   }
@@ -284,7 +286,10 @@ function ManageStoreTab() {
                     <td style={{ padding: "16px 20px", color: "#8A8880", fontWeight: 600 }}>{idx + 1}</td>
                     <td style={{ padding: "16px 20px" }}>
                       {isEditing ? (
-                        <input value={editName} onChange={e => setEditName(e.target.value)} style={{ ...inputStyle, width: 160 }} />
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          <input value={editName} onChange={e => setEditName(e.target.value)} style={{ ...inputStyle, width: 160 }} placeholder="Store Name" />
+                          <input type="password" value={editPassword} onChange={e => setEditPassword(e.target.value)} style={{ ...inputStyle, width: 160, fontSize: 11, padding: "6px 10px" }} placeholder="New Password (optional)" />
+                        </div>
                       ) : (
                         <span style={{ fontWeight: 700, color: "#1A1A16" }}>{store.name}</span>
                       )}
@@ -312,7 +317,7 @@ function ManageStoreTab() {
                       ) : (
                         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                           <button
-                            onClick={() => { setEditingId(store._id); setEditName(store.name); setEditPhone(store.phone || ""); setEditAddress(store.address || ""); }}
+                            onClick={() => { setEditingId(store._id); setEditName(store.name); setEditPhone(store.phone || ""); setEditAddress(store.address || ""); setEditPassword(""); }}
                             style={{ padding: "6px 14px", border: "1px solid #CCCAC5", background: "#fff", color: "#4A4840", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 12 }}
                           >Edit</button>
                           <button

@@ -60,8 +60,33 @@ export default function UserType({ onBack, onSelect, onLoginSuccess, selectedTyp
 
   return (
     <div className="user-type-page">
-      <div className="user-type-panel">
-        <div className="user-type-brand" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "8px" }}>
+      <div className="user-type-panel" style={{ position: "relative" }}>
+        {/* Back Button positioned absolutely in the panel or we can put it inline */}
+        <button
+          onClick={onBack}
+          style={{
+            position: "absolute",
+            top: "20px",
+            left: "20px",
+            background: "none",
+            border: "1px solid #EDEAE4",
+            borderRadius: "20px",
+            padding: "6px 12px",
+            fontSize: "12px",
+            color: "#4A4840",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            fontWeight: "600",
+            fontFamily: "'Poppins', sans-serif"
+          }}
+          onMouseEnter={(e) => e.target.style.background = "#FAFAF8"}
+          onMouseLeave={(e) => e.target.style.background = "none"}
+        >
+          ← Back
+        </button>
+        <div className="user-type-brand" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "8px", marginTop: "24px" }}>
           <div style={{
             background: "#556B2F", borderRadius: "50%", width: "46px", height: "46px",
             display: "flex", alignItems: "center", justifyContent: "center",
