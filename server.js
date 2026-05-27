@@ -28,7 +28,7 @@ const productDb = mongoose.connection.useDb("PRODUCT");
 const userDb = mongoose.connection.useDb("USERLOGIN");
 
 const app = express();
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "20mb" }));
 app.use(cors());
 
 app.get("/api/oils", async (_req, res) => {

@@ -30,6 +30,9 @@ function getThumbnail(item) {
   return "/spices_category.jpg";
 }
 
+const MAX_IMAGE_SIZE_MB = 4;
+const MAX_IMAGE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+
 export default function ManagerDashboard({ onNavigate }) {
   const [activeTab, setActiveTab] = useState("inventory"); // 'inventory' or 'orders'
   
@@ -56,6 +59,7 @@ export default function ManagerDashboard({ onNavigate }) {
   const [newPrice, setNewPrice] = useState("");
   const [newStock, setNewStock] = useState("100");
   const [newImage, setNewImage] = useState(""); // Base64 image uploaded from device
+  const [newImageError, setNewImageError] = useState("");
 
   // Orders state
   const [orders, setOrders] = useState([]);
@@ -213,10 +217,31 @@ export default function ManagerDashboard({ onNavigate }) {
       setNewPrice("");
       setNewStock("100");
       setNewImage("");
+      setNewImageError("");
       fetchInventory();
     } catch (err) {
       alert(err.message);
     }
+  }
+
+  function handleProductImageFile(file) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setNewImageError("Please choose a valid image file.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setNewImageError(`Please choose an image smaller than ${MAX_IMAGE_SIZE_MB}MB.`);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setNewImage(String(ev.target.result || ""));
+      setNewImageError("");
+    };
+    reader.onerror = () => setNewImageError("Could not read this image. Please try another file.");
+    reader.readAsDataURL(file);
   }
 
   // Handle Driver Assignment
@@ -855,15 +880,11 @@ export default function ManagerDashboard({ onNavigate }) {
                   cursor: "pointer",
                   transition: "border-color 0.2s"
                 }}
+                  onClick={() => document.getElementById("product-image-upload")?.click()}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
-                    const file = e.dataTransfer.files[0];
-                    if (file && file.type.startsWith("image/")) {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => setNewImage(ev.target.result);
-                      reader.readAsDataURL(file);
-                    }
+                    handleProductImageFile(e.dataTransfer.files[0]);
                   }}
                 >
                   {newImage ? (
@@ -875,7 +896,10 @@ export default function ManagerDashboard({ onNavigate }) {
                       />
                       <button
                         type="button"
-                        onClick={() => setNewImage("")}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNewImage("");
+                        }}
                         style={{
                           position: "absolute", top: 6, right: 6,
                           background: "rgba(26,26,22,0.75)", color: "#fff",
@@ -893,6 +917,7 @@ export default function ManagerDashboard({ onNavigate }) {
                       </div>
                       <label
                         htmlFor="product-image-upload"
+                        onClick={(e) => e.stopPropagation()}
                         style={{
                           display: "inline-block",
                           padding: "8px 18px",
@@ -912,18 +937,17 @@ export default function ManagerDashboard({ onNavigate }) {
                         accept="image/*"
                         style={{ display: "none" }}
                         onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setNewImage(ev.target.result);
-                            reader.readAsDataURL(file);
-                          }
+                          handleProductImageFile(e.target.files[0]);
+                          e.target.value = "";
                         }}
                       />
-                      <div style={{ fontSize: 11, color: "#A0A09A", marginTop: 6 }}>JPG, PNG, WEBP supported</div>
+                      <div style={{ fontSize: 11, color: "#A0A09A", marginTop: 6 }}>JPG, PNG, WEBP up to {MAX_IMAGE_SIZE_MB}MB</div>
                     </div>
                   )}
                 </div>
+                {newImageError && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: "#C0392B", fontWeight: 600 }}>{newImageError}</div>
+                )}
               </div>
 
               <button
