@@ -1,32 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { SiteNav } from "./App";
+import { getOilTypeImage } from "../oilTypeImages";
 
 function fmt(n) {
   return "₹" + Number(n).toLocaleString("en-IN");
 }
 
 function getThumbnail(item) {
-  // Always prefer the custom uploaded image
-  if (item.image) return item.image;
   if (item.type === "Oil") {
-    const oilType = (item.oilType || "").trim().toLowerCase();
-    if (oilType.includes("sunflower")) {
-      return "/sunfloweroil.jpeg";
-    }
-    if (oilType.includes("coconut")) {
-      return "https://images.unsplash.com/photo-1621236378699-8c4a0a9a8d39?w=400&q=80";
-    }
-    if (oilType.includes("mustard")) {
-      return "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80";
-    }
-    if (oilType.includes("groundnut")) {
-      return "https://images.unsplash.com/photo-1543362906-acfc16c67564?w=400&q=80";
-    }
-    if (oilType.includes("rice bran") || oilType.includes("ricebran")) {
-      return "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&q=80";
-    }
-    return "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80";
+    return getOilTypeImage(item.oilType, item.image || "/oils_category.jpg");
   }
+  if (item.image) return item.image;
   return "/spices_category.jpg";
 }
 

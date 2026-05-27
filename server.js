@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import bcrypt from "bcryptjs";
 import https from "https";
+import { getOilTypeImage } from "./oilTypeImages.js";
 
 
 function makeFlexibleRegexString(str) {
@@ -34,7 +35,10 @@ app.use(cors());
 app.get("/api/oils", async (_req, res) => {
     try {
         const oils = await productDb.collection("OIL").find().toArray();
-        res.json(oils);
+        res.json(oils.map(o => ({
+            ...o,
+            image: o.image || o.thumbnail || getOilTypeImage(o.oilType, "")
+        })));
     } catch (err) {
         console.error("oils error:", err);
         res.status(500).json({ msg: "Failed to load oils" });
@@ -383,7 +387,7 @@ app.get("/api/inventory", async (req, res) => {
             pack: o.quantity,
             price: o.price,
             stock: o.stock !== undefined ? o.stock : 100,
-            image: o.image || o.thumbnail || ""
+            image: o.image || o.thumbnail || getOilTypeImage(o.oilType, "")
         }));
 
         const masalaItems = masalas.map(m => ({
@@ -418,7 +422,7 @@ app.post("/api/inventory/:type", async (req, res) => {
             if (!companyName || !oilType || !quantity) {
                 return res.status(400).json({ msg: "Company name, oil type and quantity are required for Oil" });
             }
-            const newItem = { companyName, oilType, quantity, price: Number(price), stock: newStock, image: image || "" };
+            const newItem = { companyName, oilType, quantity, price: Number(price), stock: newStock, image: image || getOilTypeImage(oilType, "") };
             await productDb.collection("OIL").insertOne(newItem);
             return res.json({ msg: "Oil item added successfully", item: newItem });
         } else if (type.toLowerCase() === "masala") {

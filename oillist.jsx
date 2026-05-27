@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
+import { getCanonicalOilType, getOilTypeImage } from "./oilTypeImages";
 
 const OIL_META = {
-  Sunflower: { emoji: "🌻", tagline: "Light & heart-healthy", accent: "#E8A020", bg: "#FFF8EC", border: "#FADDAA", image: "/sunfloweroil.jpeg" },
-  Coconut: { emoji: "🥥", tagline: "Pure & aromatic", accent: "#1D9E75", bg: "#F0FBF6", border: "#A0DFC5", image: "https://images.unsplash.com/photo-1621236378699-8c4a0a9a8d39?w=400&q=80" },
-  Mustard: { emoji: "🟡", tagline: "Bold & traditional", accent: "#C48A0A", bg: "#FFFBEC", border: "#F5DC90", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
-  Groundnut: { emoji: "🥜", tagline: "Rich & flavourful", accent: "#C0613A", bg: "#FFF4F0", border: "#F5C4B0", image: "https://images.unsplash.com/photo-1543362906-acfc16c67564?w=400&q=80" },
-  "Rice Bran": { emoji: "🌾", tagline: "Versatile & nutritious", accent: "#7A7060", bg: "#F9F7F4", border: "#D4CFC5", image: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&q=80" }
+  Sunflower: { emoji: "🌻", tagline: "Light & heart-healthy", accent: "#E8A020", bg: "#FFF8EC", border: "#FADDAA", image: getOilTypeImage("Sunflower") },
+  Coconut: { emoji: "🥥", tagline: "Pure & aromatic", accent: "#1D9E75", bg: "#F0FBF6", border: "#A0DFC5", image: getOilTypeImage("Coconut") },
+  Mustard: { emoji: "🟡", tagline: "Bold & traditional", accent: "#C48A0A", bg: "#FFFBEC", border: "#F5DC90", image: getOilTypeImage("Mustard") },
+  Groundnut: { emoji: "🥜", tagline: "Rich & flavourful", accent: "#C0613A", bg: "#FFF4F0", border: "#F5C4B0", image: getOilTypeImage("Groundnut") },
+  "Rice Bran": { emoji: "🌾", tagline: "Versatile & nutritious", accent: "#7A7060", bg: "#F9F7F4", border: "#D4CFC5", image: getOilTypeImage("Rice Bran") }
 };
 
-const FALLBACK_META = { emoji: "🛢️", tagline: "Quality edible oil", accent: "#1D4F8F", bg: "#EEF4FB", border: "#C9DBEF", image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80" };
+const FALLBACK_META = { emoji: "🛢️", tagline: "Quality edible oil", accent: "#1D4F8F", bg: "#EEF4FB", border: "#C9DBEF", image: "/oils_category.jpg" };
 
 function fmt(n) {
   return "₹" + Number(n).toLocaleString("en-IN");
@@ -31,32 +32,25 @@ function parseLitres(quantity) {
 function groupOils(rows) {
   const byType = new Map();
   for (const row of rows) {
-    let oilType = row.oilType || "Other";
-    
-    // Normalize and match keys case-insensitively/substring
-    const trimmedType = oilType.trim().toLowerCase();
-    let matchedKey = Object.keys(OIL_META).find(k => {
-      const lowerKey = k.toLowerCase();
-      return trimmedType === lowerKey || trimmedType.includes(lowerKey);
-    });
-
-    if (matchedKey) {
-      oilType = matchedKey;
-    }
+    const oilType = getCanonicalOilType(row.oilType);
 
     if (!byType.has(oilType)) {
       const meta = OIL_META[oilType] || FALLBACK_META;
+      const typeImage = getOilTypeImage(oilType, row.image || meta.image);
       byType.set(oilType, {
         id: oilType.toLowerCase().replace(/\s+/g, ""),
         name: `${oilType} Oil`,
         oilType,
         ...meta,
+        image: typeImage,
         brands: new Map()
       });
     }
     const oil = byType.get(oilType);
-    // If this product has a custom uploaded image, use it as the category thumbnail
-    if (row.image) {
+    const knownTypeImage = getOilTypeImage(oilType, "");
+    if (knownTypeImage) {
+      oil.image = knownTypeImage;
+    } else if (row.image) {
       oil.image = row.image;
     }
     if (!oil.brands.has(row.companyName)) {

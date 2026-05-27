@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { getOilTypeImage } from "./oilTypeImages";
 
 const oils = [
   {
     id: "sunflower",
     name: "Sunflower Oil",
     emoji: "🌻",
-    image: "/sunfloweroil.jpeg",
+    image: getOilTypeImage("Sunflower"),
     discount: "18% OFF",
     brands: ["Gemini", "Fortune", "Saffola", "Sundrop", "Gold Winner"],
     sizes: ["1 L", "2 L", "5 L", "15 L", "50 L"],
@@ -14,7 +15,7 @@ const oils = [
     id: "coconut",
     name: "Coconut Oil",
     emoji: "🥥",
-    image: "https://images.unsplash.com/photo-1621236378699-8c4a0a9a8d39?w=400&q=80",
+    image: getOilTypeImage("Coconut"),
     discount: "12% OFF",
     brands: ["Parachute", "KLF Nirmal", "Coco Soul", "Marico", "Patanjali"],
     sizes: ["500 ml", "1 L", "2 L", "5 L", "15 L"],
@@ -23,7 +24,7 @@ const oils = [
     id: "mustard",
     name: "Mustard Oil",
     emoji: "🫙",
-    image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80",
+    image: getOilTypeImage("Mustard"),
     discount: "22% OFF",
     brands: ["Patanjali", "Engine", "Dhara", "Fortune", "Borges"],
     sizes: ["1 L", "2 L", "5 L", "15 L", "50 L"],
@@ -32,7 +33,7 @@ const oils = [
     id: "groundnut",
     name: "Groundnut Oil",
     emoji: "🥜",
-    image: "https://images.unsplash.com/photo-1543362906-acfc16c67564?w=400&q=80",
+    image: getOilTypeImage("Groundnut"),
     discount: "15% OFF",
     brands: ["Fortune", "Sundrop", "Gokul", "Ceres", "Rajam"],
     sizes: ["1 L", "2 L", "5 L", "15 L", "50 L"],
@@ -41,7 +42,7 @@ const oils = [
     id: "ricebran",
     name: "Rice Bran Oil",
     emoji: "🌾",
-    image: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&q=80",
+    image: getOilTypeImage("Rice Bran"),
     discount: "20% OFF",
     brands: ["Fortune", "Saffola", "Nutrela", "Vitalife", "Rice Bran Health"],
     sizes: ["1 L", "2 L", "5 L", "15 L", "50 L"],
