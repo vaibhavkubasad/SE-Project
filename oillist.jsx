@@ -70,15 +70,36 @@ function HomePage({ oils, onSelect, cart, onPlaceOrder, placing, success }) {
   return (
     <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", minHeight: "100vh", background: "#FAFAF8" }}>
       <div style={{ background: "#fff", borderBottom: "1px solid #EDEAE4", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }} onClick={() => localNavigate("/")}>
-          <div style={{
-            background: "#556B2F", borderRadius: "50%", width: "42px", height: "42px",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "16px", fontWeight: "700", color: "#FAF7F2", fontFamily: "'Playfair Display', serif"
-          }}>AA</div>
-          <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B2B", letterSpacing: "0.03em", fontFamily: "'Playfair Display', serif", lineHeight: "1.1" }}>Akalwadi</div>
-            <div style={{ fontSize: "9px", color: "#7A8279", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: "600", marginTop: "1px" }}>Associates</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <button
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                localNavigate("/");
+              }
+            }}
+            style={{
+              background: "#FAFAF8", color: "#1A1A16", border: "1px solid #EDEAE4",
+              padding: "6px 14px", borderRadius: "20px", fontWeight: "600",
+              cursor: "pointer", fontFamily: "system-ui", fontSize: "13px",
+              display: "flex", alignItems: "center", gap: "4px"
+            }}
+            onMouseEnter={(e) => { e.target.style.background = "#EDEAE4"; }}
+            onMouseLeave={(e) => { e.target.style.background = "#FAFAF8"; }}
+          >
+            ← Back
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }} onClick={() => localNavigate("/")}>
+            <div style={{
+              background: "#556B2F", borderRadius: "50%", width: "42px", height: "42px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "16px", fontWeight: "700", color: "#FAF7F2", fontFamily: "'Playfair Display', serif"
+            }}>AA</div>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B2B", letterSpacing: "0.03em", fontFamily: "'Playfair Display', serif", lineHeight: "1.1" }}>Akalwadi</div>
+              <div style={{ fontSize: "9px", color: "#7A8279", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: "600", marginTop: "1px" }}>Associates</div>
+            </div>
           </div>
         </div>
         {totalItems > 0 && (
