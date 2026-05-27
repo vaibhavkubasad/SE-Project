@@ -183,17 +183,40 @@ export default function MasalaListBeforeLogin() {
         borderBottom: "1px solid rgba(85,107,47,0.12)", padding: "14px 40px",
         display: "flex", alignItems: "center", justifyContent: "space-between"
       }}>
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
-          <div style={{
-            background: "#556B2F", borderRadius: "50%", width: "42px", height: "42px",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "16px", fontWeight: "700", color: "#FAF7F2", fontFamily: "'Playfair Display', serif"
-          }}>AA</div>
-          <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B2B", letterSpacing: "0.03em", fontFamily: "'Playfair Display', serif", lineHeight: "1.1" }}>Akalwadi</div>
-            <div style={{ fontSize: "9px", color: "#7A8279", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: "600", marginTop: "1px" }}>Associates</div>
-          </div>
-        </a>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.history.pushState({}, "", "/");
+                window.dispatchEvent(new PopStateEvent("popstate"));
+              }
+            }}
+            style={{
+              background: "#FAF7F2", color: "#556B2F", border: "1px solid #556B2F",
+              padding: "6px 14px", borderRadius: "20px", fontWeight: "600",
+              cursor: "pointer", fontFamily: "'Poppins', sans-serif", fontSize: "12px",
+              display: "flex", alignItems: "center", gap: "4px"
+            }}
+            onMouseEnter={(e) => { e.target.style.background = "#556B2F"; e.target.style.color = "#FAF7F2"; }}
+            onMouseLeave={(e) => { e.target.style.background = "#FAF7F2"; e.target.style.color = "#556B2F"; }}
+          >
+            ← Back
+          </button>
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
+            <div style={{
+              background: "#556B2F", borderRadius: "50%", width: "42px", height: "42px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "16px", fontWeight: "700", color: "#FAF7F2", fontFamily: "'Playfair Display', serif"
+            }}>AA</div>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B2B", letterSpacing: "0.03em", fontFamily: "'Playfair Display', serif", lineHeight: "1.1" }}>Akalwadi</div>
+              <div style={{ fontSize: "9px", color: "#7A8279", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: "600", marginTop: "1px" }}>Associates</div>
+            </div>
+          </a>
+        </div>
 
         {/* Action */}
         <button

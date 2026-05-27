@@ -1,4 +1,83 @@
-import React from "react";
+import React, { useState } from "react";
+
+function ChangePasswordModal({ onClose, role }) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    const session = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    const userId = session._id || session.id;
+    if (!userId) return setError("Not logged in");
+
+    try {
+      const res = await fetch("/api/change-password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: session.role || role,
+          id: userId,
+          currentPassword,
+          newPassword
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg || "Failed to change password");
+      setSuccess("Password changed successfully!");
+      setTimeout(() => onClose(), 2000);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const inputStyle = { width: "100%", padding: "10px 12px", border: "1px solid #CCCAC5", borderRadius: 8, fontSize: 13, boxSizing: "border-box", fontFamily: "'Poppins', sans-serif" };
+
+  return (
+    <div
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(26, 26, 22, 0.4)", display: "flex",
+        alignItems: "center", justifyContent: "center", zIndex: 1000,
+        backdropFilter: "blur(4px)"
+      }}
+    >
+      <div style={{
+        background: "#fff", borderRadius: 18, padding: "32px",
+        width: "100%", maxWidth: 400, boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+        fontFamily: "'Poppins', sans-serif", textAlign: "left"
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: "#1A1A16" }}>Change Password</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#8A8880" }}>✕</button>
+        </div>
+        
+        {error && <div style={{ background: "#FFF3F0", color: "#C0392B", padding: "10px", borderRadius: 8, marginBottom: 16, fontSize: 13 }}>{error}</div>}
+        {success && <div style={{ background: "#F0FBF6", color: "#1D9E75", padding: "10px", borderRadius: 8, marginBottom: 16, fontSize: 13 }}>{success}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "#4A4840" }}>Current Password</label>
+            <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required style={inputStyle} placeholder="Enter current password" />
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: "#4A4840" }}>New Password</label>
+            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required style={inputStyle} placeholder="Enter new password" />
+          </div>
+          <button type="submit" style={{
+            width: "100%", padding: "12px", borderRadius: 10, border: "none",
+            background: "#556B2F", color: "#FAF7F2", fontWeight: 700, fontSize: 14, cursor: "pointer"
+          }}>
+            Update Password
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 const HOME_PATH = "/";
 const ABOUT_PATH = "/about";
@@ -46,6 +125,7 @@ const productCategories = [
 
 export default function Logout({ selectedType, onLogout, onNavigate }) {
   const navigate = onNavigate || (() => {});
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const dynamicNavItems = [
     { label: "Home", href: HOME_PATH },
@@ -67,26 +147,49 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
 
   return (
     <div className="page-shell">
+      {showPasswordModal && <ChangePasswordModal role={selectedType} onClose={() => setShowPasswordModal(false)} />}
       <header className="hero-section" id="top">
         <nav className="navbar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-          <a
-            href={HOME_PATH}
-            onClick={(event) => {
-              event.preventDefault();
-              navigate(HOME_PATH);
-            }}
-            style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}
-          >
-            <div style={{
-              background: "#556B2F", borderRadius: "50%", width: "42px", height: "42px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "16px", fontWeight: "700", color: "#FAF7F2", fontFamily: "'Playfair Display', serif"
-            }}>AA</div>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B2B", letterSpacing: "0.03em", fontFamily: "'Playfair Display', serif", lineHeight: "1.1" }}>Akalwadi</div>
-              <div style={{ fontSize: "9px", color: "#7A8279", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: "600", marginTop: "1px" }}>Associates</div>
-            </div>
-          </a>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                if (window.history.length > 1) {
+                  window.history.back();
+                } else {
+                  navigate(HOME_PATH);
+                }
+              }}
+              style={{
+                background: "#FAF7F2", color: "#556B2F", border: "1px solid #556B2F",
+                padding: "6px 14px", borderRadius: "20px", fontWeight: "600",
+                cursor: "pointer", fontFamily: "'Poppins', sans-serif", fontSize: "12px",
+                display: "flex", alignItems: "center", gap: "4px"
+              }}
+              onMouseEnter={(e) => { e.target.style.background = "#556B2F"; e.target.style.color = "#FAF7F2"; }}
+              onMouseLeave={(e) => { e.target.style.background = "#FAF7F2"; e.target.style.color = "#556B2F"; }}
+            >
+              ← Back
+            </button>
+            <a
+              href={HOME_PATH}
+              onClick={(event) => {
+                event.preventDefault();
+                navigate(HOME_PATH);
+              }}
+              style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}
+            >
+              <div style={{
+                background: "#556B2F", borderRadius: "50%", width: "42px", height: "42px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "16px", fontWeight: "700", color: "#FAF7F2", fontFamily: "'Playfair Display', serif"
+              }}>AA</div>
+              <div style={{ textAlign: "left" }}>
+                <div style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B2B", letterSpacing: "0.03em", fontFamily: "'Playfair Display', serif", lineHeight: "1.1" }}>Akalwadi</div>
+                <div style={{ fontSize: "9px", color: "#7A8279", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: "600", marginTop: "1px" }}>Associates</div>
+              </div>
+            </a>
+          </div>
 
           <ul className="nav-links">
             {dynamicNavItems.map((item) => (
@@ -184,6 +287,7 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
                   >
                     Browse Products
                   </a>
+                  <button onClick={() => setShowPasswordModal(true)} className="secondary-button" style={{ cursor: "pointer" }}>Change Password</button>
                 </>
               ) : selectedType === "Manager" ? (
                 <>
@@ -207,6 +311,7 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
                   >
                     Browse Oils
                   </a>
+                  <button onClick={() => setShowPasswordModal(true)} className="secondary-button" style={{ cursor: "pointer" }}>Change Password</button>
                 </>
               ) : (
                 <>
@@ -241,6 +346,7 @@ export default function Logout({ selectedType, onLogout, onNavigate }) {
                   >
                     Track Orders
                   </a>
+                  <button onClick={() => setShowPasswordModal(true)} className="secondary-button" style={{ cursor: "pointer" }}>Change Password</button>
                 </>
               )}
             </div>
