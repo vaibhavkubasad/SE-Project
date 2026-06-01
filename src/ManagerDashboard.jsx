@@ -1,9 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { SiteNav } from "./App";
+import { getOilTypeImage } from "../oilTypeImages";
 
 function fmt(n) {
   return "₹" + Number(n).toLocaleString("en-IN");
 }
+
+function getThumbnail(item) {
+  if (item.type === "Oil") {
+    return getOilTypeImage(item.oilType, item.image || "/oils_category.jpg");
+  }
+  if (item.image) return item.image;
+  return "/spices_category.jpg";
+}
+
+const MAX_IMAGE_SIZE_MB = 4;
+const MAX_IMAGE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
 export default function ManagerDashboard({ onNavigate }) {
   const [activeTab, setActiveTab] = useState("inventory"); // 'inventory' or 'orders'
@@ -30,6 +42,8 @@ export default function ManagerDashboard({ onNavigate }) {
   const [newPack, setNewPack] = useState(""); // quantity or weight
   const [newPrice, setNewPrice] = useState("");
   const [newStock, setNewStock] = useState("100");
+  const [newImage, setNewImage] = useState(""); // Base64 image uploaded from device
+  const [newImageError, setNewImageError] = useState("");
 
   // Orders state
   const [orders, setOrders] = useState([]);
@@ -167,6 +181,8 @@ export default function ManagerDashboard({ onNavigate }) {
       payload.quantity = newPack;
     }
 
+    if (newImage) payload.image = newImage;
+
     try {
       const response = await fetch(`/api/inventory/${newType}`, {
         method: "POST",
@@ -184,10 +200,32 @@ export default function ManagerDashboard({ onNavigate }) {
       setNewPack("");
       setNewPrice("");
       setNewStock("100");
+      setNewImage("");
+      setNewImageError("");
       fetchInventory();
     } catch (err) {
       alert(err.message);
     }
+  }
+
+  function handleProductImageFile(file) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setNewImageError("Please choose a valid image file.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setNewImageError(`Please choose an image smaller than ${MAX_IMAGE_SIZE_MB}MB.`);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setNewImage(String(ev.target.result || ""));
+      setNewImageError("");
+    };
+    reader.onerror = () => setNewImageError("Could not read this image. Please try another file.");
+    reader.readAsDataURL(file);
   }
 
   // Handle Driver Assignment
@@ -382,6 +420,7 @@ export default function ManagerDashboard({ onNavigate }) {
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: "#FDFDFD", borderBottom: "1.5px solid #EDEAE4", color: "#8A8880" }}>
+                      <th style={{ padding: "16px 20px" }}>Thumbnail</th>
                       <th style={{ padding: "16px 20px" }}>Item Type</th>
                       <th style={{ padding: "16px 20px" }}>Product Name</th>
                       <th style={{ padding: "16px 20px" }}>Pack Size</th>
@@ -395,6 +434,13 @@ export default function ManagerDashboard({ onNavigate }) {
                       const isEditing = editingId === item._id;
                       return (
                         <tr key={item._id} style={{ borderBottom: "1px solid #EDEAE4", transition: "background 0.15s" }}>
+                          <td style={{ padding: "16px 20px" }}>
+                            <img
+                              src={getThumbnail(item)}
+                              alt={item.name}
+                              style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", border: "1px solid #EDEAE4" }}
+                            />
+                          </td>
                           <td style={{ padding: "16px 20px" }}>
                             <span style={{
                               background: item.type === "Oil" ? "#EEF4FB" : item.type === "Masala" ? "#FFF9E8" : "#F0FBF6",
@@ -804,6 +850,88 @@ export default function ManagerDashboard({ onNavigate }) {
                     style={{ width: "100%", padding: "10px", border: "1px solid #CCCAC5", borderRadius: 8, boxSizing: "border-box" }}
                   />
                 </div>
+              </div>
+
+              {/* Product Image Upload */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>Product Image (optional)</label>
+                <div style={{
+                  border: "2px dashed #CCCAC5",
+                  borderRadius: 10,
+                  padding: "16px",
+                  textAlign: "center",
+                  background: "#FAFAF8",
+                  cursor: "pointer",
+                  transition: "border-color 0.2s"
+                }}
+                  onClick={() => document.getElementById("product-image-upload")?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleProductImageFile(e.dataTransfer.files[0]);
+                  }}
+                >
+                  {newImage ? (
+                    <div style={{ position: "relative" }}>
+                      <img
+                        src={newImage}
+                        alt="Preview"
+                        style={{ width: "100%", maxHeight: 140, objectFit: "cover", borderRadius: 8 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNewImage("");
+                        }}
+                        style={{
+                          position: "absolute", top: 6, right: 6,
+                          background: "rgba(26,26,22,0.75)", color: "#fff",
+                          border: "none", borderRadius: "50%", width: 26, height: 26,
+                          cursor: "pointer", fontSize: 14, display: "flex",
+                          alignItems: "center", justifyContent: "center"
+                        }}
+                      >✕</button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ fontSize: 28, marginBottom: 6 }}>🖼️</div>
+                      <div style={{ fontSize: 13, color: "#6A6860", marginBottom: 8 }}>
+                        Drag &amp; drop or click to upload
+                      </div>
+                      <label
+                        htmlFor="product-image-upload"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          display: "inline-block",
+                          padding: "8px 18px",
+                          background: "#1A1A16",
+                          color: "#fff",
+                          borderRadius: 8,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer"
+                        }}
+                      >
+                        Choose Image
+                      </label>
+                      <input
+                        id="product-image-upload"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          handleProductImageFile(e.target.files[0]);
+                          e.target.value = "";
+                        }}
+                      />
+                      <div style={{ fontSize: 11, color: "#A0A09A", marginTop: 6 }}>JPG, PNG, WEBP up to {MAX_IMAGE_SIZE_MB}MB</div>
+                    </div>
+                  )}
+                </div>
+                {newImageError && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: "#C0392B", fontWeight: 600 }}>{newImageError}</div>
+                )}
               </div>
 
               <button
