@@ -141,7 +141,7 @@ app.put("/api/change-password", async (req, res) => {
 
         await userDb.collection(collectionName).updateOne(
             { _id: new mongoose.Types.ObjectId(id) },
-            { $set: { password: String(newPassword).trim() } }
+            { $set: { password: bcrypt.hashSync(String(newPassword).trim(), 10) } }
         );
 
         res.json({ msg: "Password changed successfully" });
@@ -619,7 +619,7 @@ app.post("/api/wholesalers", async (req, res) => {
         }
         const newStore = {
             name,
-            password,
+            password: bcrypt.hashSync(password, 10),
             phone: phone || "",
             address: address || "",
             createdAt: new Date()
@@ -641,7 +641,7 @@ app.put("/api/wholesalers/:id", async (req, res) => {
         if (name !== undefined) updates.name = name;
         if (phone !== undefined) updates.phone = phone;
         if (address !== undefined) updates.address = address;
-        if (password !== undefined && password !== "") updates.password = password;
+        if (password !== undefined && password !== "") updates.password = bcrypt.hashSync(password, 10);
 
         await userDb.collection("WHOLESALERS").updateOne(
             { _id: new mongoose.Types.ObjectId(id) },
@@ -693,7 +693,7 @@ app.post("/api/staff", async (req, res) => {
         const collection = role === "Manager" ? "MANAGER" : "DRIVERS";
         const newStaff = { 
             name, 
-            password, 
+            password: bcrypt.hashSync(password, 10), 
             createdAt: new Date(),
             ...(role === "Driver" ? { phone: phone || "" } : {})
         };
@@ -733,7 +733,7 @@ app.put("/api/staff/:role/:id", async (req, res) => {
 
         const updates = {};
         if (name !== undefined) updates.name = name;
-        if (password !== undefined && password !== "") updates.password = password;
+        if (password !== undefined && password !== "") updates.password = bcrypt.hashSync(password, 10);
         if (role === "Driver" && phone !== undefined) updates.phone = phone;
 
         await userDb.collection(collection).updateOne(

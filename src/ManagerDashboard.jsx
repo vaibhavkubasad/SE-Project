@@ -789,12 +789,12 @@ export default function ManagerDashboard({ onNavigate }) {
                     />
                   </div>
                   <div style={{ marginBottom: 14 }}>
-                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>Pack Volume (e.g. 1L, 5L, 500ml)</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>Pack Volume (e.g. 1 Box, 15 Box)</label>
                     <input
                       type="text"
                       value={newPack}
                       onChange={(e) => setNewPack(e.target.value)}
-                      placeholder="1L"
+                      placeholder="1 Box"
                       required
                       style={{ width: "100%", padding: "10px", border: "1px solid #CCCAC5", borderRadius: 8, boxSizing: "border-box" }}
                     />
