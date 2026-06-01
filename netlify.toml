@@ -1,0 +1,14 @@
+# netlify.toml
+
+# Redirect all frontend "/api/*" calls to your deployed Render backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://se-project-5ptg.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Fallback to index.html for React Router / Single Page App routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
