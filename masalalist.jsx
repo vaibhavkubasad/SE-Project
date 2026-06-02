@@ -1,21 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
+import { getMasalaImage } from "./masalaImages";
 
 const MASALA_META = {
   Chicken: { emoji: "🍗", accent: "#A8541F", bg: "#FCEEDF", border: "#EDC09A", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
-  Mutton: { emoji: "🥩", accent: "#8B2A2A", bg: "#FBE9E9", border: "#E5B5B5", image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400&q=80" },
+  Mutton: { emoji: "🥩", accent: "#8B2A2A", bg: "#FBE9E9", border: "#E5B5B5", image: "/mutton.jpeg" },
   Kabab: { emoji: "🫙", accent: "#8C4C2F", bg: "#FBF3EE", border: "#E9C9B6", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" },
   Dhania: { emoji: "🌿", accent: "#3F8A4D", bg: "#F0F8EF", border: "#BFE0C2", image: "https://images.unsplash.com/photo-1599909533601-fc01a2d5e9a7?w=400&q=80" },
   "Red Chilli": { emoji: "🌶️", accent: "#C0392B", bg: "#FFF3F0", border: "#F4C1B8", image: "https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=400&q=80" },
-  Turmeric: { emoji: "🟡", accent: "#D49B15", bg: "#FFF9E8", border: "#F0DA8F", image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&q=80" },
+  Turmeric: { emoji: "🟡", accent: "#D49B15", bg: "#FFF9E8", border: "#F0DA8F", image: "/turmeric.jpeg" },
   "Garam Masala": { emoji: "🫙", accent: "#7A2E5D", bg: "#FBF0F7", border: "#E7BED7", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
   Rasam: { emoji: "🍲", accent: "#B05030", bg: "#FFF1EC", border: "#F0C7B5", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" },
-  Sambar: { emoji: "🥣", accent: "#A4471D", bg: "#FFF1E5", border: "#F0C5A2", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" }
+  Sambar: { emoji: "🥣", accent: "#A4471D", bg: "#FFF1E5", border: "#F0C5A2", image: "/sambar.jpeg" }
 };
 
 const FALLBACK_META = { emoji: "🌶️", accent: "#8C4C2F", bg: "#FBF3EE", border: "#E9C9B6", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" };
 
 function fmt(n) {
   return `₹${Number(n).toLocaleString("en-IN")}`;
+}
+
+function handleMasalaImageError(event) {
+  if (!event.currentTarget.src.endsWith("/spices_category.jpg")) {
+    event.currentTarget.src = "/spices_category.jpg";
+  }
 }
 
 function localNavigate(path) {
@@ -121,7 +128,7 @@ function SpiceCard({ spice, index, onSelect }) {
       }}
     >
       <div style={{ width: "100%", height: 100, borderRadius: 12, overflow: "hidden", marginBottom: 14 }}>
-        <img src={spice.image} alt={spice.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <img src={spice.image} alt={spice.name} onError={handleMasalaImageError} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
       <div style={{ fontFamily: "'Georgia', serif", fontSize: 17, fontWeight: 700, color: "#1A1A16", marginBottom: 4 }}>{spice.name}</div>
       <div style={{ fontSize: 12, color: "#8A8880", fontFamily: "system-ui", marginBottom: 16 }}>{spice.weightLabel} pack</div>
@@ -152,6 +159,7 @@ function SpiceDetailPage({ spice, onBack, onAddToCart, cart, onPlaceOrder, placi
       name: spice.name,
       pack: spice.weightLabel,
       packPrice: spice.price,
+      image: spice.image,
       qty,
       totalGrams,
       total: totalPrice
@@ -175,7 +183,9 @@ function SpiceDetailPage({ spice, onBack, onAddToCart, cart, onPlaceOrder, placi
 
       <div style={{ background: spice.bg, borderBottom: `1px solid ${spice.border}`, padding: "32px 24px 28px" }}>
         <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", alignItems: "center", gap: 20 }}>
-          <div style={{ fontSize: 56, lineHeight: 1 }}>{spice.emoji}</div>
+          <div style={{ width: 72, height: 72, borderRadius: 14, overflow: "hidden", border: `1.5px solid ${spice.border}`, background: "#fff", flexShrink: 0 }}>
+            <img src={spice.image} alt={spice.name} onError={handleMasalaImageError} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
           <div>
             <div style={{ fontSize: 11, color: spice.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>Spices</div>
             <h2 style={{ fontFamily: "'Georgia', serif", fontSize: 26, fontWeight: 700, color: "#1A1A16", margin: 0, lineHeight: 1.2 }}>{spice.name}</h2>
@@ -272,8 +282,9 @@ function CartPreview({ cart, onPlaceOrder, placing, success }) {
     <div style={{ marginTop: 24, background: "#F4F2EE", borderRadius: 14, padding: "16px 18px" }}>
       <div style={{ fontSize: 11, color: "#8A8880", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, marginBottom: 12 }}>Your order so far</div>
       {cart.map((c) => (
-        <div key={c.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "5px 0", borderBottom: "0.5px solid #E0DDD8" }}>
-          <span style={{ color: "#4A4840" }}>{c.name} — {c.qty}×{c.pack}</span>
+        <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, fontSize: 13, padding: "6px 0", borderBottom: "0.5px solid #E0DDD8" }}>
+          <img src={c.image || getMasalaImage(c.name)} alt={c.name} onError={handleMasalaImageError} style={{ width: 30, height: 30, borderRadius: 7, objectFit: "cover", border: "1px solid #E0DDD8", flexShrink: 0 }} />
+          <span style={{ color: "#4A4840", flex: 1 }}>{c.name} — {c.qty}×{c.pack}</span>
           <span style={{ fontWeight: 600, color: "#1A1A16" }}>{fmt(c.total)}</span>
         </div>
       ))}
@@ -318,8 +329,8 @@ function shapeMasalas(rows) {
       grams,
       weightLabel,
       ...meta,
-      // Always prefer the custom uploaded image if present
-      image: row.image || meta.image
+      // Always prefer the custom uploaded image if present.
+      image: row.image || getMasalaImage(row.name, meta.image)
     };
   });
 }

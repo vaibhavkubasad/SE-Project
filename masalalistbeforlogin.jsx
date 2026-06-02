@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getMasalaImage } from "./masalaImages";
 
-const masalas = [
+const DEFAULT_MASALAS = [
   { id: "chicken", name: "Chicken Masala", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80",
     sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
-  { id: "mutton", name: "Mutton Masala", image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400&q=80",
+  { id: "mutton", name: "Mutton Masala", image: "/mutton.jpeg",
     sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
   { id: "kabab", name: "Kabab Masala", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80",
     sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
@@ -11,17 +12,50 @@ const masalas = [
     sizes: ["100g", "200g", "500g", "1kg"], cat: "Powder" },
   { id: "redchilli", name: "Red Chilli Powder", image: "https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=400&q=80",
     sizes: ["100g", "200g", "500g", "1kg"], cat: "Powder" },
-  { id: "turmeric", name: "Turmeric Powder", image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&q=80",
+  { id: "turmeric", name: "Turmeric Powder", image: "/turmeric.jpeg",
     sizes: ["100g", "200g", "500g", "1kg"], cat: "Powder" },
   { id: "garam", name: "Garam Masala", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80",
     sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
   { id: "rasam", name: "Rasam Powder", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80",
     sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
-  { id: "sambar", name: "Sambar Powder", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80",
+  { id: "sambar", name: "Sambar Powder", image: "/sambar.jpeg",
     sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
 ];
 
 const categories = ["All", "Powder", "Spice Blends"];
+
+function inferMasalaCategory(name) {
+  return /powder|chilli|chili|turmeric|dhania|dhaniya|dhainya|coriander/i.test(String(name || ""))
+    ? "Powder"
+    : "Spice Blends";
+}
+
+function isPlaceholderMasalaImage(image) {
+  const value = String(image || "");
+  return !value || value.includes("images.unsplash.com") || value === "/spices_category.jpg" || value === "/spices_category.png";
+}
+
+function shapeCatalogMasala(row) {
+  const name = row.name || "Masala";
+  const pack = row.weight || row.pack || row.quantity;
+  const image = isPlaceholderMasalaImage(row.image)
+    ? getMasalaImage(name, row.image || "/spices_category.jpg")
+    : row.image;
+
+  return {
+    id: row._id || row.id || `${name}-${pack || "default"}`,
+    name,
+    image,
+    sizes: row.sizes || (pack ? [pack] : ["100g", "200g", "500g", "1kg"]),
+    cat: row.cat || inferMasalaCategory(name)
+  };
+}
+
+function handleMasalaImageError(event) {
+  if (!event.currentTarget.src.endsWith("/spices_category.jpg")) {
+    event.currentTarget.src = "/spices_category.jpg";
+  }
+}
 
 function LoginModal({ onClose }) {
   return (
@@ -95,7 +129,7 @@ function MasalaCard({ item, onAdd }) {
     }}>
       {/* Image area */}
       <div style={{ position: "relative", background: "#FAF7F2", overflow: "hidden", height: 160 }}>
-        <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <img src={item.image} alt={item.name} onError={handleMasalaImageError} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
 
       {/* Info */}
@@ -162,9 +196,35 @@ function MasalaCard({ item, onAdd }) {
 }
 
 export default function MasalaListBeforeLogin() {
+  const [masalas, setMasalas] = useState(() => DEFAULT_MASALAS.map(shapeCatalogMasala));
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchMasalas() {
+      try {
+        const response = await fetch("/api/masalas");
+        if (!response.ok) throw new Error("Failed to load masalas");
+        const data = await response.json();
+        if (!cancelled && Array.isArray(data) && data.length > 0) {
+          setMasalas(data.map(shapeCatalogMasala));
+        }
+      } catch {
+        if (!cancelled) {
+          setMasalas(DEFAULT_MASALAS.map(shapeCatalogMasala));
+        }
+      }
+    }
+
+    fetchMasalas();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filtered = masalas.filter(m => {
     const matchSearch = m.name.toLowerCase().includes(search.toLowerCase());

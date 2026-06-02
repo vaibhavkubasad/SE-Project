@@ -6,13 +6,85 @@ import mongoose from "mongoose";
 import cors from "cors";
 import bcrypt from "bcryptjs";
 import https from "https";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { getOilTypeImage } from "./oilTypeImages.js";
+import {
+    MASALA_IMAGE_EXTENSIONS,
+    MASALA_IMAGE_FALLBACK,
+    getMasalaImage,
+    normalizeMasalaKey
+} from "./masalaImages.js";
 
 
 function makeFlexibleRegexString(str) {
     if (!str) return "^$";
     const clean = String(str).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/\s+/g, '');
     return '^' + clean.split('').join('\\s*') + '$';
+}
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PUBLIC_DIR = path.join(__dirname, "public");
+
+function isSpecificMasalaImage(image) {
+    const value = String(image || "").trim();
+    return value && !value.includes("images.unsplash.com") && value !== MASALA_IMAGE_FALLBACK && value !== "/spices_category.png";
+}
+
+function findMasalaImageInPublic(name) {
+    const key = normalizeMasalaKey(name);
+    if (!key) return "";
+
+    try {
+        const files = fs
+            .readdirSync(PUBLIC_DIR, { withFileTypes: true })
+            .filter((entry) => entry.isFile())
+            .map((entry) => entry.name)
+            .filter((file) => MASALA_IMAGE_EXTENSIONS.includes(path.extname(file).toLowerCase()));
+
+        const exact = files.find((file) => normalizeMasalaKey(path.parse(file).name) === key);
+        const contains = files.find((file) => {
+            const fileKey = normalizeMasalaKey(path.parse(file).name);
+            return fileKey.includes(key) || key.includes(fileKey);
+        });
+
+        const match = exact || contains;
+        return match ? `/${match}` : "";
+    } catch (err) {
+        console.warn("Could not scan public masala images:", err.message);
+        return "";
+    }
+}
+
+function resolveMasalaImage(name, image = "") {
+    if (isSpecificMasalaImage(image)) return image;
+    return getMasalaImage(name, "") || findMasalaImageInPublic(name) || MASALA_IMAGE_FALLBACK;
+}
+
+function decorateOrderItem(item = {}) {
+    if (item.oilName) {
+        return {
+            ...item,
+            image: item.image || getOilTypeImage(item.oilName, "/oils_category.jpg")
+        };
+    }
+
+    if (item.name) {
+        return {
+            ...item,
+            image: resolveMasalaImage(item.name, item.image || item.thumbnail)
+        };
+    }
+
+    return item;
+}
+
+function decorateOrder(order = {}) {
+    return {
+        ...order,
+        items: Array.isArray(order.items) ? order.items.map(decorateOrderItem) : []
+    };
 }
 
 const PORT = process.env.PORT || 5000;
@@ -48,7 +120,10 @@ app.get("/api/oils", async (_req, res) => {
 app.get("/api/masalas", async (_req, res) => {
     try {
         const masalas = await productDb.collection("MASALA").find().toArray();
-        res.json(masalas);
+        res.json(masalas.map(m => ({
+            ...m,
+            image: resolveMasalaImage(m.name, m.image || m.thumbnail)
+        })));
     } catch (err) {
         console.error("masalas error:", err);
         res.status(500).json({ msg: "Failed to load masalas" });
@@ -200,9 +275,11 @@ app.post("/api/orders", async (req, res) => {
             return res.status(400).json({ msg: "Wholesaler name, items and totalAmount are required" });
         }
 
+        const orderItems = items.map(decorateOrderItem);
+
         const newOrder = {
             wholesalerName,
-            items,
+            items: orderItems,
             totalAmount,
             status: "Pending",
             driverName: null,
@@ -212,7 +289,7 @@ app.post("/api/orders", async (req, res) => {
         await userDb.collection("ORDERS").insertOne(newOrder);
 
         // Decrease stock if stock field exists in inventory, fallback to 100 if undefined
-        for (const item of items) {
+        for (const item of orderItems) {
             const qty = Number(item.qty) || 1;
             if (item.oilName) {
                 const formattedType = item.oilName.replace(/\s*[Oo]il\s*$/, "").trim();
@@ -258,7 +335,7 @@ app.get("/api/orders", async (req, res) => {
         const { wholesalerName } = req.query || {};
         const query = wholesalerName ? { wholesalerName } : {};
         const orders = await userDb.collection("ORDERS").find(query).sort({ createdAt: -1 }).toArray();
-        res.json(orders);
+        res.json(orders.map(decorateOrder));
     } catch (err) {
         console.error("get orders error:", err);
         res.status(500).json({ msg: "Failed to load orders" });
@@ -439,7 +516,7 @@ app.get("/api/inventory", async (req, res) => {
             pack: m.weight,
             price: m.price,
             stock: m.stock !== undefined ? m.stock : 100,
-            image: m.image || m.thumbnail || ""
+            image: resolveMasalaImage(m.name, m.image || m.thumbnail)
         }));
 
         res.json([...oilItems, ...masalaItems]);
@@ -471,7 +548,7 @@ app.post("/api/inventory/:type", async (req, res) => {
             if (!name || !weight) {
                 return res.status(400).json({ msg: "Name and weight are required for Masala" });
             }
-            const newItem = { name, weight, price: Number(price), stock: newStock, image: image || "" };
+            const newItem = { name, weight, price: Number(price), stock: newStock, image: image || resolveMasalaImage(name) };
             await productDb.collection("MASALA").insertOne(newItem);
             return res.json({ msg: "Masala item added successfully", item: newItem });
         } else {
@@ -497,6 +574,9 @@ app.put("/api/inventory/:type/:id", async (req, res) => {
         if (name !== undefined) updates.name = name;
         if (weight !== undefined) updates.weight = weight;
         if (image !== undefined) updates.image = image;
+        if (type.toLowerCase() === "masala" && name !== undefined && image === undefined) {
+            updates.image = resolveMasalaImage(name);
+        }
 
         const targetCollection =
             type.toLowerCase() === "oil" ? "OIL" : "MASALA";

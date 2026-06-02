@@ -1,8 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { SiteNav } from "./App";
+import { getOilTypeImage } from "../oilTypeImages";
+import { getMasalaImage } from "../masalaImages";
 
 function fmt(n) {
   return "₹" + Number(n).toLocaleString("en-IN");
+}
+
+function getOrderItemThumbnail(item) {
+  if (item.image) return item.image;
+  if (item.oilName) return getOilTypeImage(item.oilName, "/oils_category.jpg");
+  return getMasalaImage(item.name);
+}
+
+function handleThumbnailError(event, fallback) {
+  if (!event.currentTarget.src.endsWith(fallback)) {
+    event.currentTarget.src = fallback;
+  }
 }
 
 export default function OrdersPage({ onNavigate }) {
@@ -174,8 +188,14 @@ export default function OrdersPage({ onNavigate }) {
                     <div style={{ fontSize: 11, color: "#8A8880", textTransform: "uppercase", fontWeight: 700, marginBottom: 8 }}>Items Detail</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {order.items.map((item, idx) => (
-                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
-                          <span style={{ color: "#4A4840" }}>
+                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, fontSize: 13 }}>
+                          <span style={{ color: "#4A4840", display: "flex", alignItems: "center", gap: 10 }}>
+                            <img
+                              src={getOrderItemThumbnail(item)}
+                              alt={item.oilName ? `${item.brand} ${item.oilName}` : item.name}
+                              onError={(event) => handleThumbnailError(event, item.oilName ? "/oils_category.jpg" : "/spices_category.jpg")}
+                              style={{ width: 34, height: 34, borderRadius: 8, objectFit: "cover", border: "1px solid #EDEAE4", flexShrink: 0 }}
+                            />
                             {item.oilName ? (
                               <strong>{item.brand} {item.oilName}</strong>
                             ) : (

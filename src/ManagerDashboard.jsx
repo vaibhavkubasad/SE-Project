@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { SiteNav } from "./App";
 import { getOilTypeImage } from "../oilTypeImages";
+import { getMasalaImage } from "../masalaImages";
 
 function fmt(n) {
   return "₹" + Number(n).toLocaleString("en-IN");
@@ -8,10 +9,21 @@ function fmt(n) {
 
 function getThumbnail(item) {
   if (item.type === "Oil") {
-    return getOilTypeImage(item.oilType, item.image || "/oils_category.jpg");
+    return item.image || getOilTypeImage(item.oilType, "/oils_category.jpg");
   }
+  return item.image || getMasalaImage(item.name);
+}
+
+function getOrderItemThumbnail(item) {
   if (item.image) return item.image;
-  return "/spices_category.jpg";
+  if (item.oilName) return getOilTypeImage(item.oilName, "/oils_category.jpg");
+  return getMasalaImage(item.name);
+}
+
+function handleThumbnailError(event, fallback) {
+  if (!event.currentTarget.src.endsWith(fallback)) {
+    event.currentTarget.src = fallback;
+  }
 }
 
 const MAX_IMAGE_SIZE_MB = 4;
@@ -438,6 +450,7 @@ export default function ManagerDashboard({ onNavigate }) {
                             <img
                               src={getThumbnail(item)}
                               alt={item.name}
+                              onError={(event) => handleThumbnailError(event, item.type === "Oil" ? "/oils_category.jpg" : "/spices_category.jpg")}
                               style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", border: "1px solid #EDEAE4" }}
                             />
                           </td>
@@ -596,21 +609,33 @@ export default function ManagerDashboard({ onNavigate }) {
                       <div style={{ marginBottom: 18 }}>
                         <div style={{ fontSize: 11, color: "#8A8880", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>Ordered Items</div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                          {order.items.map((item, idx) => (
+                          {order.items.map((item, idx) => {
+                            const fallback = item.oilName ? "/oils_category.jpg" : "/spices_category.jpg";
+                            return (
                             <span
                               key={idx}
                               style={{
                                 background: "#FAFAF8",
                                 border: "1px solid #EDEAE4",
                                 borderRadius: 8,
-                                padding: "6px 12px",
+                                padding: "6px 12px 6px 6px",
                                 fontSize: 12,
-                                color: "#4A4840"
+                                color: "#4A4840",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 8
                               }}
                             >
+                              <img
+                                src={getOrderItemThumbnail(item)}
+                                alt={item.oilName ? `${item.brand} ${item.oilName}` : item.name}
+                                onError={(event) => handleThumbnailError(event, fallback)}
+                                style={{ width: 28, height: 28, borderRadius: 6, objectFit: "cover", border: "1px solid #EDEAE4" }}
+                              />
                               {item.oilName ? `${item.brand} ${item.oilName}` : item.name} ({item.qty} × {item.pack})
                             </span>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -1035,9 +1060,17 @@ export default function ManagerDashboard({ onNavigate }) {
                       borderBottom: idx < lowStockItems.length - 1 ? "1px solid #EDEAE4" : "none"
                     }}
                   >
-                    <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <img
+                        src={getThumbnail(item)}
+                        alt={item.name}
+                        onError={(event) => handleThumbnailError(event, item.type === "Oil" ? "/oils_category.jpg" : "/spices_category.jpg")}
+                        style={{ width: 34, height: 34, borderRadius: 8, objectFit: "cover", border: "1px solid #EDEAE4", flexShrink: 0 }}
+                      />
+                      <div>
                       <span style={{ fontWeight: 700, color: "#1A1A16", fontSize: 13 }}>{item.name}</span>
                       <span style={{ marginLeft: 8, fontSize: 11, color: "#8A8880" }}>({item.pack})</span>
+                      </div>
                     </div>
                     <span style={{ 
                       color: "#C0392B", 
