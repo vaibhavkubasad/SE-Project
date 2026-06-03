@@ -150,6 +150,21 @@ export default function About({ onNavigate }) {
             gap: 32px;
           }
         }
+
+        .facilities-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 30px;
+        }
+        @media (max-width: 768px) {
+          .facilities-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+          }
+          .facility-card {
+            height: 280px !important;
+          }
+        }
       `}</style>
 
       {/* 1. HEADER HERO SECTION */}
@@ -316,6 +331,55 @@ export default function About({ onNavigate }) {
                   Our operational dominance is powered by a sophisticated dual-location strategy. We maintain our administrative and partner-relations headquarters in the commercial heart of Dharwad at Sheelvantar Street, Kamankatti. Simultaneously, our physical bulk logistics and heavy warehousing operations are executed from our expansive facilities on the Old APMC Road. This spatial agility allows our localized delivery fleets to achieve unmatched market penetration, servicing diverse demand centers from the Belur Industrial Area to the residential layouts of Vidyagiri, Saptapura, and Malmaddi.
                 </p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* NEW: DISTRIBUTION & WAREHOUSING FACILITIES */}
+        <section id="about-facilities" style={{
+          padding: "40px 40px 80px 40px",
+          maxWidth: "1140px",
+          margin: "0 auto"
+        }}>
+          <div style={{ textAlign: "center", marginBottom: "40px" }}>
+            <p className="eyebrow" style={{
+              color: "#556B2F",
+              letterSpacing: "0.15em",
+              fontSize: "11px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              marginBottom: "12px"
+            }}>
+              Operational Infrastructure
+            </p>
+            <h2 className="custom-serif-header" style={{
+              fontSize: "32px",
+              fontWeight: "700",
+              color: "#2B2B2B",
+              marginBottom: "16px",
+              fontFamily: "'Playfair Display', serif"
+            }}>
+              Our Distribution & Storage Facilities
+            </h2>
+            <p className="custom-sans-body" style={{
+              fontSize: "15px",
+              lineHeight: "1.6",
+              color: "#7A8279",
+              maxWidth: "800px",
+              margin: "0 auto"
+  }}>
+              Take an inside look at our active heavy logistics warehousing and inventory stockpiles on Old APMC Road, accommodating high-volume dual-location supply requirements.
+            </p>
+          </div>
+
+          <div className="facilities-grid" style={{ height: "400px" }}>
+            <div className="facility-card" style={{ height: "100%" }}>
+              <img src="/about_sacks.jpg" alt="Bulk Sacks Storage" />
+              <div className="facility-label">Bulk Sacks Storage</div>
+            </div>
+            <div className="facility-card" style={{ height: "100%" }}>
+              <img src="/about_boxes.jpg" alt="Boxed Inventory & Spices" />
+              <div className="facility-label">Boxed Inventory & Spices</div>
             </div>
           </div>
         </section>
