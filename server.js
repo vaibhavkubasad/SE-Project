@@ -265,6 +265,21 @@ app.get("/api/orders", async (req, res) => {
     }
 });
 
+function normalizePhoneNumber(phone) {
+    if (!phone) return "";
+    // Clean all non-digit, non-plus characters
+    let cleaned = String(phone).replace(/[^\d+]/g, "").trim();
+    // If it's a 10-digit number (e.g. 8762983290), prepend +91 for India
+    if (cleaned.length === 10 && !cleaned.startsWith("+")) {
+        cleaned = "+91" + cleaned;
+    }
+    // If it has 12 digits and starts with 91 (e.g. 918762983290), prepend +
+    if (cleaned.length === 12 && cleaned.startsWith("91")) {
+        cleaned = "+" + cleaned;
+    }
+    return cleaned;
+}
+
 // ==========================================
 // Twilio SMS Helper Function
 // ==========================================
@@ -280,7 +295,7 @@ async function sendSMS(to, body) {
         return { success: results.every(r => r.success), results };
     }
 
-    const singleTo = recipients[0];
+    const singleTo = normalizePhoneNumber(recipients[0]);
 
     return new Promise((resolve) => {
         const sid = process.env.TWILIO_ACCOUNT_SID;
@@ -363,6 +378,7 @@ app.put("/api/orders/:id/assign", async (req, res) => {
         // Fetch order details for the SMS body
         const order = await userDb.collection("ORDERS").findOne({ _id: new mongoose.Types.ObjectId(id) });
 
+        let smsWarning = null;
         if (driver && driver.phone && order) {
             const formattedTotal = "₹" + Number(order.totalAmount).toLocaleString("en-IN");
             
@@ -372,22 +388,37 @@ app.put("/api/orders/:id/assign", async (req, res) => {
             
             // 1. Send SMS to Driver
             const smsMessage = `[Akalwadi Associates] Hello ${driver.name}, you have been assigned to deliver order for "${order.wholesalerName}". Amount: ${formattedTotal}${addressInfo}.`;
-            sendSMS(driver.phone, smsMessage).catch(err => {
-                console.error("Async driver SMS sending failed:", err);
-            });
+            console.log(`[SMS] Triggering driver SMS send to ${driver.name} (${driver.phone})...`);
+            
+            const driverSmsResult = await sendSMS(driver.phone, smsMessage);
+            if (!driverSmsResult.success) {
+                smsWarning = `Driver SMS failed: ${driverSmsResult.error || driverSmsResult.reason || "Unknown Twilio error"}`;
+                console.error(`[SMS] Driver SMS sending failed:`, driverSmsResult.error || driverSmsResult.reason);
+            } else {
+                console.log(`[SMS] Driver SMS sent successfully.`);
+            }
 
             // 2. Send SMS to Wholesaler (Customer) if they have a phone number registered
             if (wholesaler && wholesaler.phone) {
                 const wholesalerMessage = `[Akalwadi Associates] Hello ${wholesaler.name}, driver ${driver.name} (Phone: ${driver.phone}) has been assigned to deliver your order of ${formattedTotal}.`;
-                sendSMS(wholesaler.phone, wholesalerMessage).catch(err => {
-                    console.error("Async wholesaler SMS sending failed:", err);
-                });
+                console.log(`[SMS] Triggering customer SMS send to ${wholesaler.name} (${wholesaler.phone})...`);
+                const customerSmsResult = await sendSMS(wholesaler.phone, wholesalerMessage);
+                if (!customerSmsResult.success) {
+                    console.error(`[SMS] Customer SMS sending failed:`, customerSmsResult.error || customerSmsResult.reason);
+                    if (!smsWarning) {
+                        smsWarning = `Customer SMS failed: ${customerSmsResult.error || customerSmsResult.reason || "Unknown Twilio error"}`;
+                    }
+                } else {
+                    console.log(`[SMS] Customer SMS sent successfully.`);
+                }
             }
         } else {
-            console.log(`SMS not sent. Driver found: ${!!driver}, Has phone: ${driver ? !!driver.phone : false}, Order found: ${!!order}`);
+            const reason = `Driver found: ${!!driver}, Has phone: ${driver ? !!driver.phone : false}, Order found: ${!!order}`;
+            console.log(`SMS not triggered. ${reason}`);
+            smsWarning = `SMS not triggered. ${reason}`;
         }
 
-        res.json({ msg: "Driver assigned successfully" });
+        res.json({ msg: "Driver assigned successfully", smsWarning });
     } catch (err) {
         console.error("assign driver error:", err);
         res.status(500).json({ msg: "Failed to assign driver" });

@@ -243,6 +243,14 @@ export default function ManagerDashboard({ onNavigate }) {
         body: JSON.stringify({ driverName })
       });
       if (!response.ok) throw new Error("Failed to assign driver");
+      
+      const data = await response.json();
+      if (data.smsWarning) {
+        alert(`Driver assigned successfully, but SMS notification failed:\n\n${data.smsWarning}\n\nPlease check the driver's phone number or Twilio credentials.`);
+      } else {
+        alert("Driver assigned successfully! SMS notification sent to driver.");
+      }
+      
       fetchOrdersAndDrivers();
     } catch (err) {
       alert(err.message);
