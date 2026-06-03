@@ -440,7 +440,7 @@ function HomePage() {
 
           <div style={{ display: "flex", gap: "16px" }}>
             <a
-              href="#products"
+              href="#contact"
               style={{
                 background: "#556B2F", color: "#FAF7F2", padding: "14px 30px", borderRadius: "30px",
                 fontWeight: "700", fontSize: "14px", textDecoration: "none", cursor: "pointer",
@@ -448,13 +448,13 @@ function HomePage() {
               }}
               onClick={(e) => {
                 e.preventDefault();
-                document.querySelector("#products")?.scrollIntoView({ behavior: "smooth" });
+                document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
               }}
             >
-              Explore Products ↗
+              Contact Us ↗
             </a>
             <a
-              href="#contact"
+              href="#products"
               style={{
                 background: "#FAF7F2", color: "#556B2F", padding: "14px 30px", borderRadius: "30px",
                 fontWeight: "700", fontSize: "14px", textDecoration: "none", cursor: "pointer",
@@ -462,10 +462,10 @@ function HomePage() {
               }}
               onClick={(e) => {
                 e.preventDefault();
-                document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
+                document.querySelector("#products")?.scrollIntoView({ behavior: "smooth" });
               }}
             >
-              Contact Us
+              Browse Products
             </a>
           </div>
         </div>
