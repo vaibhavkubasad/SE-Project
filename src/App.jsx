@@ -551,7 +551,7 @@ function HomePage() {
           <p className="eyebrow" style={{ color: "#556B2F", letterSpacing: "0.15em", fontSize: "11px", fontWeight: "700", marginBottom: "16px" }}>
             ABOUT AKALWADI
           </p>
-          <h2 className="custom-serif-header" style={{ fontSize: "46px", fontWeight: "700", lineHeight: "1.2", margin: "0 0 24px 0" }}>
+          <h2 className="custom-serif-header" style={{ fontFamily: "Arial, sans-serif", fontSize: "46px", fontWeight: "700", lineHeight: "1.2", margin: "0 0 24px 0" }}>
             A quiet obsession with <br/>
             <span style={{ color: "#556B2F", fontStyle: "italic" }}>purity</span>, scaled <br/>
             with integrity.
