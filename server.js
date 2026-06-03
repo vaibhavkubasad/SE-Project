@@ -22,8 +22,13 @@ if (!process.env.MONGO_URI) {
     process.exit(1);
 }
 
-await mongoose.connect(process.env.MONGO_URI);
-console.log("MongoDB connected");
+try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("MongoDB connected");
+} catch (err) {
+    console.error("MongoDB connection failed at startup:", err.message);
+    console.warn("Starting API server in disconnected mode. Mongoose will reconnect in the background.");
+}
 
 const productDb = mongoose.connection.useDb("PRODUCT");
 const userDb = mongoose.connection.useDb("USERLOGIN");
