@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 
 const MASALA_META = {
-  Chicken: { emoji: "🍗", accent: "#A8541F", bg: "#FCEEDF", border: "#EDC09A", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
-  Mutton: { emoji: "🥩", accent: "#8B2A2A", bg: "#FBE9E9", border: "#E5B5B5", image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400&q=80" },
-  Kabab: { emoji: "🫙", accent: "#8C4C2F", bg: "#FBF3EE", border: "#E9C9B6", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" },
-  Dhania: { emoji: "🌿", accent: "#3F8A4D", bg: "#F0F8EF", border: "#BFE0C2", image: "https://images.unsplash.com/photo-1599909533601-fc01a2d5e9a7?w=400&q=80" },
-  "Red Chilli": { emoji: "🌶️", accent: "#C0392B", bg: "#FFF3F0", border: "#F4C1B8", image: "https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=400&q=80" },
-  Turmeric: { emoji: "🟡", accent: "#D49B15", bg: "#FFF9E8", border: "#F0DA8F", image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&q=80" },
-  "Garam Masala": { emoji: "🫙", accent: "#7A2E5D", bg: "#FBF0F7", border: "#E7BED7", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" },
-  Rasam: { emoji: "🍲", accent: "#B05030", bg: "#FFF1EC", border: "#F0C7B5", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" },
-  Sambar: { emoji: "🥣", accent: "#A4471D", bg: "#FFF1E5", border: "#F0C5A2", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80" }
+  Chicken: { emoji: "🍗", accent: "#A8541F", bg: "#FCEEDF", border: "#EDC09A", image: "/chicken_masala.png" },
+  Mutton: { emoji: "🥩", accent: "#8B2A2A", bg: "#FBE9E9", border: "#E5B5B5", image: "/mutton_masala.png" },
+  Kabab: { emoji: "🫙", accent: "#8C4C2F", bg: "#FBF3EE", border: "#E9C9B6", image: "/kabab_masala.png" },
+  Dhania: { emoji: "🌿", accent: "#3F8A4D", bg: "#F0F8EF", border: "#BFE0C2", image: "/dhania_powder.png" },
+  "Red Chilli": { emoji: "🌶️", accent: "#C0392B", bg: "#FFF3F0", border: "#F4C1B8", image: "/red_chilli_powder.png" },
+  Turmeric: { emoji: "🟡", accent: "#D49B15", bg: "#FFF9E8", border: "#F0DA8F", image: "/turmeric_powder.png" },
+  "Garam Masala": { emoji: "🫙", accent: "#7A2E5D", bg: "#FBF0F7", border: "#E7BED7", image: "/garam_masala.png" },
+  Rasam: { emoji: "🍲", accent: "#B05030", bg: "#FFF1EC", border: "#F0C7B5", image: "/rasam_powder.png" },
+  Sambar: { emoji: "🥣", accent: "#A4471D", bg: "#FFF1E5", border: "#F0C5A2", image: "/sambar_powder.png" }
 };
 
 const FALLBACK_META = { emoji: "🌶️", accent: "#8C4C2F", bg: "#FBF3EE", border: "#E9C9B6", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80" };
@@ -102,6 +102,8 @@ function HomePage({ masalas, onSelect, cart, onPlaceOrder, placing, success }) {
 
 function SpiceCard({ spice, index, onSelect }) {
   const [hovered, setHovered] = useState(false);
+  const minPrice = Math.min(...spice.packs.map((p) => p.price));
+  const sizesLabel = spice.packs.map(p => p.label).join(", ");
 
   return (
     <div
@@ -124,10 +126,10 @@ function SpiceCard({ spice, index, onSelect }) {
         <img src={spice.image} alt={spice.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
       <div style={{ fontFamily: "'Georgia', serif", fontSize: 17, fontWeight: 700, color: "#1A1A16", marginBottom: 4 }}>{spice.name}</div>
-      <div style={{ fontSize: 12, color: "#8A8880", fontFamily: "system-ui", marginBottom: 16 }}>{spice.weightLabel} pack</div>
+      <div style={{ fontSize: 12, color: "#8A8880", fontFamily: "system-ui", marginBottom: 16 }}>{sizesLabel} pack</div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontSize: 14, color: spice.accent, fontFamily: "'Georgia', serif", fontWeight: 700 }}>
-          {fmt(spice.price)}
+          from {fmt(minPrice)}
         </div>
         <div style={{ background: spice.accent, color: "#fff", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontFamily: "system-ui", fontWeight: 600 }}>
           View →
@@ -138,20 +140,22 @@ function SpiceCard({ spice, index, onSelect }) {
 }
 
 function SpiceDetailPage({ spice, onBack, onAddToCart, cart, onPlaceOrder, placing, success }) {
+  const [selectedPack, setSelectedPack] = useState(spice.packs[0] || null);
   const [qty, setQty] = useState(10);
   const [added, setAdded] = useState(false);
 
-  const totalPrice = qty * spice.price;
-  const totalGrams = qty * spice.grams;
+  const totalPrice = selectedPack ? qty * selectedPack.price : 0;
+  const totalGrams = selectedPack ? qty * selectedPack.grams : 0;
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
   const cartTotal = cart.reduce((sum, item) => sum + item.total, 0);
 
   function handleAdd() {
+    if (!selectedPack) return;
     onAddToCart({
       id: Date.now(),
       name: spice.name,
-      pack: spice.weightLabel,
-      packPrice: spice.price,
+      pack: selectedPack.label,
+      packPrice: selectedPack.price,
       qty,
       totalGrams,
       total: totalPrice
@@ -179,63 +183,92 @@ function SpiceDetailPage({ spice, onBack, onAddToCart, cart, onPlaceOrder, placi
           <div>
             <div style={{ fontSize: 11, color: spice.accent, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>Spices</div>
             <h2 style={{ fontFamily: "'Georgia', serif", fontSize: 26, fontWeight: 700, color: "#1A1A16", margin: 0, lineHeight: 1.2 }}>{spice.name}</h2>
-            <div style={{ fontSize: 13, color: "#6A6860", marginTop: 4 }}>{spice.weightLabel} pack · {fmt(spice.price)}</div>
+            <div style={{ fontSize: 13, color: "#6A6860", marginTop: 4 }}>{spice.packs.length} size{spice.packs.length === 1 ? "" : "s"} available</div>
           </div>
         </div>
       </div>
 
       <div style={{ maxWidth: 680, margin: "0 auto", padding: "24px 24px 40px" }}>
+        {/* Step 1: Pack size selection */}
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 11, color: "#8A8880", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, marginBottom: 14 }}>Quantity (number of packs)</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", border: "1.5px solid #EDE4DC", borderRadius: 10, overflow: "hidden", background: "#fff" }}>
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))} style={{ width: 42, height: 42, border: "none", background: "none", fontSize: 20, color: "#4A4840", cursor: "pointer" }}>−</button>
-              <input
-                type="number"
-                value={qty}
-                min={1}
-                onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-                style={{ width: 64, height: 42, border: "none", borderLeft: "1px solid #EDE4DC", borderRight: "1px solid #EDE4DC", textAlign: "center", fontSize: 16, fontWeight: 600, color: "#1A1A16", background: "none", fontFamily: "system-ui" }}
-              />
-              <button onClick={() => setQty((q) => q + 1)} style={{ width: 42, height: 42, border: "none", background: "none", fontSize: 20, color: "#4A4840", cursor: "pointer" }}>+</button>
-            </div>
-            <div style={{ fontSize: 13, color: "#8A8880" }}>
-              × {spice.weightLabel} = <strong style={{ color: "#1A1A16" }}>{(totalGrams / 1000).toLocaleString("en-IN")} kg</strong>
-            </div>
+          <div style={{ fontSize: 11, color: "#8A8880", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, marginBottom: 14 }}>Step 1 — Pack size</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {spice.packs.map((pack) => (
+              <button
+                key={pack.label}
+                onClick={() => setSelectedPack(pack)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: 10,
+                  border: selectedPack?.label === pack.label ? `2px solid ${spice.accent}` : "1.5px solid #EDE4DC",
+                  background: selectedPack?.label === pack.label ? spice.bg : "#fff",
+                  color: selectedPack?.label === pack.label ? spice.accent : "#4A4840",
+                  fontWeight: selectedPack?.label === pack.label ? 700 : 400,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  transition: "all 0.15s"
+                }}
+              >
+                {pack.label} — {fmt(pack.price)}
+              </button>
+            ))}
           </div>
         </div>
+
+        {selectedPack && (
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ fontSize: 11, color: "#8A8880", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, marginBottom: 14 }}>Step 2 — Quantity (number of packs)</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", border: "1.5px solid #EDE4DC", borderRadius: 10, overflow: "hidden", background: "#fff" }}>
+                <button onClick={() => setQty((q) => Math.max(1, q - 1))} style={{ width: 42, height: 42, border: "none", background: "none", fontSize: 20, color: "#4A4840", cursor: "pointer" }}>−</button>
+                <input
+                  type="number"
+                  value={qty}
+                  min={1}
+                  onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
+                  style={{ width: 64, height: 42, border: "none", borderLeft: "1px solid #EDE4DC", borderRight: "1px solid #EDE4DC", textAlign: "center", fontSize: 16, fontWeight: 600, color: "#1A1A16", background: "none", fontFamily: "system-ui" }}
+                />
+                <button onClick={() => setQty((q) => q + 1)} style={{ width: 42, height: 42, border: "none", background: "none", fontSize: 20, color: "#4A4840", cursor: "pointer" }}>+</button>
+              </div>
+              <div style={{ fontSize: 13, color: "#8A8880" }}>
+                × {selectedPack.label} = <strong style={{ color: "#1A1A16" }}>{(totalGrams / 1000).toLocaleString("en-IN")} kg</strong>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div style={{ background: "#fff", border: "1.5px solid #EDE4DC", borderRadius: 14, padding: "20px 22px", marginBottom: 20 }}>
           <div style={{ fontSize: 11, color: "#8A8880", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, marginBottom: 14 }}>Bill summary</div>
           <Row label="Spice" value={spice.name} />
-          <Row label="Pack size" value={spice.weightLabel} />
-          <Row label="Pack price" value={fmt(spice.price)} />
-          <Row label="Quantity" value={`${qty} × ${spice.weightLabel}`} />
-          <Row label="Total weight" value={`${(totalGrams / 1000).toLocaleString("en-IN")} kg`} />
+          <Row label="Pack size" value={selectedPack ? selectedPack.label : "—"} />
+          <Row label="Pack price" value={selectedPack ? fmt(selectedPack.price) : "—"} />
+          <Row label="Quantity" value={selectedPack ? `${qty} × ${selectedPack.label}` : "—"} />
+          <Row label="Total weight" value={selectedPack ? `${(totalGrams / 1000).toLocaleString("en-IN")} kg` : "—"} />
           <div style={{ borderTop: "1px solid #EDE4DC", marginTop: 12, paddingTop: 14, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <span style={{ fontSize: 15, fontWeight: 600, color: "#1A1A16" }}>Total amount</span>
-            <span style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Georgia', serif", color: spice.accent }}>{fmt(totalPrice)}</span>
+            <span style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Georgia', serif", color: selectedPack ? spice.accent : "#C0BDB8" }}>{selectedPack ? fmt(totalPrice) : "—"}</span>
           </div>
         </div>
 
         <button
           onClick={handleAdd}
+          disabled={!selectedPack}
           style={{
             width: "100%",
             padding: "14px",
             borderRadius: 12,
             border: "none",
-            background: added ? "#1D9E75" : spice.accent,
-            color: "#fff",
+            background: selectedPack ? (added ? "#1D9E75" : spice.accent) : "#EDEAE4",
+            color: selectedPack ? "#fff" : "#A0A09A",
             fontSize: 15,
             fontWeight: 700,
-            cursor: "pointer",
+            cursor: selectedPack ? "pointer" : "not-allowed",
             fontFamily: "system-ui",
             transition: "background 0.25s",
             letterSpacing: "-0.1px"
           }}
         >
-          {added ? "✓ Added to order!" : `Add to order · ${fmt(totalPrice)}`}
+          {added ? "✓ Added to order!" : selectedPack ? `Add to order · ${fmt(totalPrice)}` : "Select pack to continue"}
         </button>
 
         {(cart.length > 0 || success) && (
@@ -306,21 +339,37 @@ function CartPreview({ cart, onPlaceOrder, placing, success }) {
   );
 }
 
-function shapeMasalas(rows) {
-  return rows.map((row) => {
-    const meta = MASALA_META[row.name] || FALLBACK_META;
+function groupMasalas(rows) {
+  const byName = new Map();
+  for (const row of rows) {
+    const name = row.name;
+    if (!byName.has(name)) {
+      const meta = MASALA_META[name] || FALLBACK_META;
+      byName.set(name, {
+        id: name.toLowerCase().replace(/\s+/g, ""),
+        name,
+        ...meta,
+        image: row.image || meta.image,
+        packs: []
+      });
+    }
+    const masala = byName.get(name);
+    // Prefer row image if present
+    if (row.image) {
+      masala.image = row.image;
+    }
     const grams = parseGrams(row.weight);
     const weightLabel = grams >= 1000 ? `${grams / 1000}kg` : `${grams}g`;
-    return {
-      id: row._id || row.name,
-      name: row.name,
-      price: Number(row.price) || 0,
+    masala.packs.push({
+      label: weightLabel,
       grams,
-      weightLabel,
-      ...meta,
-      // Always prefer the custom uploaded image if present
-      image: row.image || meta.image
-    };
+      price: Number(row.price) || 0
+    });
+  }
+
+  return Array.from(byName.values()).map((masala) => {
+    masala.packs.sort((a, b) => a.grams - b.grams);
+    return masala;
   });
 }
 
@@ -588,7 +637,7 @@ export default function App() {
     };
   }, []);
 
-  const masalas = useMemo(() => shapeMasalas(rawMasalas), [rawMasalas]);
+  const masalas = useMemo(() => groupMasalas(rawMasalas), [rawMasalas]);
 
   async function handlePlaceOrder() {
     if (cart.length === 0) return;

@@ -110,7 +110,6 @@ function LoginModal({ onClose }) {
 }
 
 function OilCard({ oil, onAdd }) {
-  const [brand, setBrand] = useState(oil.brands[0]);
   const [size, setSize] = useState(oil.sizes[1]);
   const [qty, setQty] = useState(1);
 
@@ -136,22 +135,6 @@ function OilCard({ oil, onAdd }) {
       <div style={{ padding: "20px 20px 0", flexGrow: 1, display: "flex", flexDirection: "column" }}>
         <div style={{ fontSize: 11, color: "#7A8279", marginBottom: 4, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>Premium Oils</div>
         <div style={{ fontSize: 15, fontWeight: 700, color: "#2B2B2B", marginBottom: 14, lineHeight: 1.4, fontFamily: "'Montserrat', sans-serif", flexGrow: 1 }}>{oil.name}</div>
-
-        {/* Brand dropdown */}
-        <div style={{ marginBottom: 10 }}>
-          <label style={{ fontSize: 11, color: "#7A8279", display: "block", marginBottom: 4, fontWeight: 500 }}>Brand</label>
-          <select
-            value={brand}
-            onChange={e => setBrand(e.target.value)}
-            style={{
-              width: "100%", padding: "8px 10px", borderRadius: 6,
-              border: "1px solid rgba(85,107,47,0.15)", fontSize: 13, color: "#2B2B2B",
-              background: "#FAF7F2", cursor: "pointer", fontFamily: "'Poppins', sans-serif",
-            }}
-          >
-            {oil.brands.map(b => <option key={b}>{b}</option>)}
-          </select>
-        </div>
 
         {/* Size dropdown */}
         <div style={{ marginBottom: 14 }}>

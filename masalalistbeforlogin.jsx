@@ -1,27 +1,82 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const masalas = [
-  { id: "chicken", name: "Chicken Masala", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80",
-    sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
-  { id: "mutton", name: "Mutton Masala", image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400&q=80",
-    sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
-  { id: "kabab", name: "Kabab Masala", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80",
-    sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
-  { id: "dhania", name: "Dhania Powder", image: "https://images.unsplash.com/photo-1599909533601-fc01a2d5e9a7?w=400&q=80",
-    sizes: ["100g", "200g", "500g", "1kg"], cat: "Powder" },
-  { id: "redchilli", name: "Red Chilli Powder", image: "https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=400&q=80",
-    sizes: ["100g", "200g", "500g", "1kg"], cat: "Powder" },
-  { id: "turmeric", name: "Turmeric Powder", image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&q=80",
-    sizes: ["100g", "200g", "500g", "1kg"], cat: "Powder" },
-  { id: "garam", name: "Garam Masala", image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80",
-    sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
-  { id: "rasam", name: "Rasam Powder", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80",
-    sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
-  { id: "sambar", name: "Sambar Powder", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400&q=80",
-    sizes: ["50g", "100g", "200g", "500g"], cat: "Spice Blends" },
+const MASALA_META = {
+  Chicken: { emoji: "🍗", accent: "#A8541F", bg: "#FCEEDF", border: "#EDC09A", image: "/chicken_masala.png" },
+  Mutton: { emoji: "🥩", accent: "#8B2A2A", bg: "#FBE9E9", border: "#E5B5B5", image: "/mutton_masala.png" },
+  Kabab: { emoji: "🫙", accent: "#8C4C2F", bg: "#FBF3EE", border: "#E9C9B6", image: "/kabab_masala.png" },
+  Dhania: { emoji: "🌿", accent: "#3F8A4D", bg: "#F0F8EF", border: "#BFE0C2", image: "/dhania_powder.png" },
+  "Red Chilli": { emoji: "🌶️", accent: "#C0392B", bg: "#FFF3F0", border: "#F4C1B8", image: "/red_chilli_powder.png" },
+  Turmeric: { emoji: "🟡", accent: "#D49B15", bg: "#FFF9E8", border: "#F0DA8F", image: "/turmeric_powder.png" },
+  "Garam Masala": { emoji: "🫙", accent: "#7A2E5D", bg: "#FBF0F7", border: "#E7BED7", image: "/garam_masala.png" },
+  Rasam: { emoji: "🍲", accent: "#B05030", bg: "#FFF1EC", border: "#F0C7B5", image: "/rasam_powder.png" },
+  Sambar: { emoji: "🥣", accent: "#A4471D", bg: "#FFF1E5", border: "#F0C5A2", image: "/sambar_powder.png" }
+};
+
+const FALLBACK_META = { emoji: "🌶️", accent: "#8C4C2F", bg: "#FBF3EE", border: "#E9C9B6", image: "/spices_category.jpg" };
+
+const FALLBACK_MASALAS_RAW = [
+  { name: "Chicken", weight: "500g", price: 135 },
+  { name: "Chicken", weight: "200g", price: 60 },
+  { name: "Mutton", weight: "200g", price: 35 },
+  { name: "Mutton", weight: "500g", price: 140 },
+  { name: "Kabab", weight: "500g", price: 100 },
+  { name: "Kabab", weight: "200g", price: 22 },
+  { name: "Dhania", weight: "200g", price: 40 },
+  { name: "Dhania", weight: "500g", price: 90 },
+  { name: "Red Chilli", weight: "500g", price: 115 },
+  { name: "Red Chilli", weight: "200g", price: 46 },
+  { name: "Turmeric", weight: "500g", price: 110 },
+  { name: "Turmeric", weight: "200g", price: 44 },
+  { name: "Garam Masala", weight: "500g", price: 145 },
+  { name: "Garam Masala", weight: "200g", price: 55 },
+  { name: "Rasam", weight: "500g", price: 175 },
+  { name: "Rasam", weight: "200g", price: 65 },
+  { name: "Sambar", weight: "500g", price: 170 },
+  { name: "Sambar", weight: "200g", price: 75 }
 ];
 
 const categories = ["All", "Powder", "Spice Blends"];
+
+function parseGrams(weight) {
+  const value = parseFloat(String(weight || "").replace(/[^\d.]/g, ""));
+  if (Number.isNaN(value)) return 100;
+  if (/kg/i.test(String(weight))) return value * 1000;
+  return value;
+}
+
+function groupMasalas(rows) {
+  const byName = new Map();
+  for (const row of rows) {
+    const name = row.name;
+    if (!byName.has(name)) {
+      const meta = MASALA_META[name] || FALLBACK_META;
+      const isPowder = ["dhania", "red chilli", "turmeric", "tumeric powder"].includes(name.toLowerCase());
+      byName.set(name, {
+        id: name.toLowerCase().replace(/\s+/g, ""),
+        name,
+        cat: isPowder ? "Powder" : "Spice Blends",
+        ...meta,
+        image: row.image || meta.image,
+        packs: []
+      });
+    }
+    const masala = byName.get(name);
+    if (row.image) {
+      masala.image = row.image;
+    }
+    const grams = parseGrams(row.weight);
+    const weightLabel = grams >= 1000 ? `${grams / 1000}kg` : `${grams}g`;
+    masala.packs.push({
+      label: weightLabel,
+      grams
+    });
+  }
+
+  return Array.from(byName.values()).map((masala) => {
+    masala.packs.sort((a, b) => a.grams - b.grams);
+    return masala;
+  });
+}
 
 function LoginModal({ onClose }) {
   return (
@@ -83,79 +138,41 @@ function LoginModal({ onClose }) {
   );
 }
 
-function MasalaCard({ item, onAdd }) {
-  const [size, setSize] = useState(item.sizes[1] || item.sizes[0]);
+function SpiceCard({ spice, index, onSelect }) {
+  const [hovered, setHovered] = useState(false);
+  const sizesLabel = spice.packs.map(p => p.label).join(", ");
 
   return (
-    <div style={{
-      background: "#fff", borderRadius: 16, overflow: "hidden",
-      border: "1px solid rgba(85,107,47,0.12)", display: "flex", flexDirection: "column",
-      boxShadow: "0 4px 15px rgba(85,107,47,0.01)", transition: "all 0.2s ease-in-out",
-      fontFamily: "'Poppins', sans-serif"
-    }}>
-      {/* Image area */}
-      <div style={{ position: "relative", background: "#FAF7F2", overflow: "hidden", height: 160 }}>
-        <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+    <div
+      onClick={onSelect}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: hovered ? spice.bg : "#fff",
+        border: `1.5px solid ${hovered ? spice.border : "#EDEAE4"}`,
+        borderRadius: 16,
+        padding: "24px 20px 20px",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        transform: hovered ? "translateY(-3px)" : "none",
+        boxShadow: hovered ? `0 8px 24px ${spice.accent}22` : "none",
+        animationDelay: `${index * 0.06}s`,
+        fontFamily: "'Poppins', sans-serif"
+      }}
+    >
+      <div style={{ width: "100%", height: 100, borderRadius: 12, overflow: "hidden", marginBottom: 14 }}>
+        <img src={spice.image} alt={spice.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
-
-      {/* Info */}
-      <div style={{ padding: "20px 20px 0", flexGrow: 1, display: "flex", flexDirection: "column" }}>
-        <div style={{ fontSize: 11, color: "#7A8279", marginBottom: 4, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>Wholesale Spices</div>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#2B2B2B", marginBottom: 14, lineHeight: 1.4, fontFamily: "'Montserrat', sans-serif", flexGrow: 1 }}>{item.name}</div>
-
-        {/* Pack size */}
-        <div style={{ marginBottom: 14 }}>
-          <label style={{ fontSize: 11, color: "#7A8279", display: "block", marginBottom: 4, fontWeight: 500 }}>Pack size</label>
-          <select
-            value={size}
-            onChange={e => setSize(e.target.value)}
-            style={{
-              width: "100%", padding: "8px 10px", borderRadius: 6,
-              border: "1px solid rgba(85,107,47,0.15)", fontSize: 13, color: "#2B2B2B",
-              background: "#FAF7F2", cursor: "pointer", fontFamily: "'Poppins', sans-serif",
-            }}
-          >
-            {item.sizes.map(s => <option key={s}>{s}</option>)}
-          </select>
+      <div style={{ fontFamily: "'Georgia', serif", fontSize: 17, fontWeight: 700, color: "#1A1A16", marginBottom: 4 }}>{spice.name}</div>
+      <div style={{ fontSize: 12, color: "#8A8880", fontFamily: "system-ui", marginBottom: 16 }}>{sizesLabel} pack</div>
+      
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontSize: 12, color: "#8A8880", fontFamily: "system-ui", fontWeight: 600 }}>
+          🔒 Prices hidden
         </div>
-
-        {/* Price hidden */}
-        <div
-          onClick={onAdd}
-          style={{
-            background: "#E8EDE4", border: "1px solid rgba(85,107,47,0.15)", borderRadius: 6, padding: "10px 12px",
-            fontSize: 12, color: "#556B2F", display: "flex", alignItems: "center", gap: 8, marginBottom: 16,
-            fontWeight: 600, cursor: "pointer"
-          }}
-        >
-          🔒 <span>Login to view wholesale prices</span>
+        <div style={{ background: spice.accent, color: "#fff", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontFamily: "system-ui", fontWeight: 600 }}>
+          View →
         </div>
-      </div>
-
-      {/* Bottom controls */}
-      <div style={{ padding: "0 20px 20px", display: "flex", alignItems: "center", gap: 10 }}>
-        {/* Bookmark */}
-        <button
-          onClick={onAdd}
-          style={{
-            width: 38, height: 38, borderRadius: 6, border: "1px solid rgba(85,107,47,0.15)",
-            background: "#fff", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-          }}
-        >🔖</button>
-
-        {/* Add */}
-        <button
-          onClick={onAdd}
-          style={{
-            flex: 1, height: 38, borderRadius: 6,
-            border: "1.5px solid #556B2F", background: "transparent",
-            color: "#556B2F", fontSize: 13, fontWeight: 700,
-            cursor: "pointer", fontFamily: "'Montserrat', sans-serif", letterSpacing: "0.02em",
-            transition: "all 0.2s",
-          }}
-        >
-          Add
-        </button>
       </div>
     </div>
   );
@@ -165,6 +182,26 @@ export default function MasalaListBeforeLogin() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [showModal, setShowModal] = useState(false);
+  const [rawMasalas, setRawMasalas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await fetch("/api/masalas");
+        if (!response.ok) throw new Error("Failed to load");
+        const data = await response.json();
+        setRawMasalas(data);
+      } catch (err) {
+        // Fallback to local hardcoded database list if offline
+        setRawMasalas(FALLBACK_MASALAS_RAW);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const masalas = useMemo(() => groupMasalas(rawMasalas), [rawMasalas]);
 
   const filtered = masalas.filter(m => {
     const matchSearch = m.name.toLowerCase().includes(search.toLowerCase());
@@ -305,14 +342,18 @@ export default function MasalaListBeforeLogin() {
         </div>
 
         {/* Cards Grid */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "60px 0", color: "#7A8279", fontSize: 15 }}>
+            Loading spices...
+          </div>
+        ) : filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "60px 0", color: "#7A8279", fontSize: 15 }}>
             No spices found matching your search.
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 24 }}>
             {filtered.map(item => (
-              <MasalaCard key={item.id} item={item} onAdd={() => setShowModal(true)} />
+              <SpiceCard key={item.id} spice={item} onSelect={() => setShowModal(true)} />
             ))}
           </div>
         )}
